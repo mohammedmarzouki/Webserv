@@ -5,6 +5,10 @@ const Spec = [
 	[/^\/\/.*/, null],
 	// multiline comment
 	[/^\/\*[\s\S]*?\*\//, null],
+	// Symbols, delimiters:
+	[/^;/, ';'],
+	[/^{/, '{'],
+	[/^}/, '}'],
 	[/^\d+/, 'NUMBER'],
 	[/^"[^"]*"/, 'STRING'],
 	[/^'[^']*'/, 'STRING'],
@@ -23,8 +27,7 @@ class Tokenizer {
 	hasMoreTokens() {
 		return this._cursor < this._string.length;
 	}
-	// hello wo
-	// 01234567
+
 	getNextToken() {
 		if (!this.hasMoreTokens()) {
 			return null;

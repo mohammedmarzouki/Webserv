@@ -4,7 +4,7 @@ const parser = new Parser();
 const program = `
 /* hello
 world */
-"hello"
+"hello";
 `;
 
 const ast = parser.parse(program);

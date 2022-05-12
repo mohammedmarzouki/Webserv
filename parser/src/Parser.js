@@ -11,7 +11,7 @@ class Parser {
 		this._tokenizer.init(string);
 
 		this._lookahead = this._tokenizer.getNextToken();
-        // console.log('on init:  ', this._lookahead);
+		// console.log('on init:  ', this._lookahead);
 
 		return this.Program();
 	}
@@ -19,8 +19,62 @@ class Parser {
 	Program() {
 		return {
 			type: 'Program',
-			body: this.Literal(),
+			body: this.StatementList(),
 		};
+	}
+
+	StatementList(stopLookahead = null) {
+		const statements = [this.Statement()];
+
+		while (
+			this._lookahead != null &&
+			this._lookahead.type !== stopLookahead
+		) {
+			statements.push(this.Statement());
+		}
+		return statements;
+	}
+
+	Statement() {
+		switch (this._lookahead.type) {
+			case ';':
+				return this.EmptyStatement();
+			case '{':
+				return this.BlockStatement();
+			default:
+				return this.ExpressionStatement();
+		}
+	}
+
+	EmptyStatement() {
+		this._eat(';');
+		return {
+			type: 'EmptyStatement',
+		};
+	}
+
+	BlockStatement() {
+		this._eat('{');
+		const body =
+			this._lookahead.type !== '}' ? this.StatementList('}') : [];
+		this._eat('}');
+		return {
+			type: 'BlockStatement',
+			body,
+		};
+	}
+
+	ExpressionStatement() {
+		const expression = this.Expression();
+		this._eat(';');
+		return {
+			type: 'ExpressionStatement',
+			expression,
+		};
+	}
+
+	Expression() {
+		return this.Literal();
 	}
 
 	Literal() {
@@ -35,16 +89,16 @@ class Parser {
 
 	StringLiteral() {
 		const token = this._eat('STRING');
-        // console.log('token: ', token);
+		// console.log('token: ', token);
 		return {
-            type: 'StringLiteral',
+			type: 'StringLiteral',
 			value: token.value.slice(1, -1),
 		};
 	}
-    
+
 	NumericLiteral() {
-        const token = this._eat('NUMBER');
-        // console.log('token: ', token);
+		const token = this._eat('NUMBER');
+		// console.log('token: ', token);
 		return {
 			type: 'NumericLiteral',
 			value: Number(token.value),
@@ -66,7 +120,7 @@ class Parser {
 		}
 
 		this._lookahead = this._tokenizer.getNextToken();
-        // console.log('on _eat:   ', this._lookahead);
+		// console.log('on _eat:   ', this._lookahead);
 
 		return token;
 	}
