@@ -1,0 +1,31 @@
+
+# this is a comment
+. . . # possibility to define variables outside main scope
+
+http {
+	# http context
+	
+	server {
+        # first server contexts
+		
+		location /match/criteria {
+			# first location context
+		}
+		
+		location /other/criteria {
+			# second location context
+			
+			location nested_match {
+				# first nested location
+			}
+			
+			location other_nested {
+				# second nested location
+			}
+		}
+	}
+	
+	server {
+		# second server context
+	}
+}
