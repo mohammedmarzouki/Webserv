@@ -1,6 +1,4 @@
-
 # this is a comment
-. . . # possibility to define variables outside main scope
 
 http {
 	# http context

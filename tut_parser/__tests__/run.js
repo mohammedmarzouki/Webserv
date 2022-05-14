@@ -2,9 +2,9 @@ const { Parser } = require('../src/Parser');
 const parser = new Parser();
 
 const program = `
-/* hello
-world */
-"hello";
+{
+    keyvalue
+}
 `;
 
 const ast = parser.parse(program);
