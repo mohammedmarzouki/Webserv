@@ -35,6 +35,12 @@ namespace webserv
 			std::string matchBlock(std::string &);
 	};
 
+	// Server class
+	class Server {};
+
+	// Location class
+	class Location {};
+
 } // namespace webserv
 
 #endif // UTILS_HPP

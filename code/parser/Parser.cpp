@@ -1,17 +1,12 @@
 #include "Parser.hpp"
 
-webserv::Parser::Parser() {
-	this->_configFile = "";
-	this->_tokenizer = webserv::Tokenizer();
-}
+webserv::Parser::Parser() {}
 
 webserv::Parser::~Parser() {}
 
-std::vector<Server> webserv::Parser::parse(std::string configFile) {
-	this->_configFile = configFile;
-	this->_tokenizer.init(this->_configFile);
+void webserv::Parser::parse(std::string configFile) {
+	this->_tokenizer.init(configFile);
 
-	return this->program();
+	_lookahead = _tokenizer.nextToken();
+	std::cout << _lookahead.getType() << ": " << _lookahead.getValue() << std::endl;
 }
-
-std::vector<Server> program(void) {}

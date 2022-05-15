@@ -1,11 +1,8 @@
-#include "parser/Tokenizer.hpp"
+#include "parser/Parser.hpp"
 
 int main(void)
 {
-	webserv::Tokenizer tokenizer(
-	"   #hhhh\n{Hello asdf  ;  }#ggggg");
-	webserv::Lookahead lookahead = tokenizer.nextToken();
-
-	std::cout << lookahead.getType() << ": " << lookahead.getValue() << std::endl;
+	webserv::Parser parser;
+	parser.parse("   #hhhh\n{Hello asdf  ;  }#ggggg");
 	return 0;
 }

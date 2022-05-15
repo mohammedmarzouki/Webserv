@@ -9,13 +9,13 @@ namespace webserv
 	class Tokenizer {
 		private:
 			std::string _input;
-			int			_pos;
+			size_t		_pos;
 			std::vector<std::pair<std::string, std::string> > _specs;
 		public:
 			Tokenizer();
-			Tokenizer(std::string);
 			~Tokenizer();
 
+			void init(std::string);
 			bool isEOF();
 			bool hasNext();
 			void fillSpecs();

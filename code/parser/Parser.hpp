@@ -1,10 +1,7 @@
 #if !defined(PARSER_HPP)
 #define PARSER_HPP
 
-#include <iostream>
-#include <vector>
 #include "Tokenizer.hpp"
-#include "../Server.hpp"
 
 namespace webserv
 {
@@ -19,8 +16,7 @@ namespace webserv
 		Parser();
 		~Parser();
 
-		std::vector<Server> parse(std::string);
-		std::vector<Server> program(void);
+		void parse(std::string);
 
 	};
 

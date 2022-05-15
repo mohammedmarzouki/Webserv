@@ -1,13 +1,16 @@
 #include "Tokenizer.hpp"
 
 // Tokenizer class
-webserv::Tokenizer::Tokenizer(): _input(""), _pos(0) {}
-
-webserv::Tokenizer::Tokenizer(std::string input): _input(input), _pos(0) {
-	fillSpecs();
-}
+webserv::Tokenizer::Tokenizer() {}
 
 webserv::Tokenizer::~Tokenizer() {}
+
+void webserv::Tokenizer::init(std::string input)
+{
+	_input = input;
+	_pos = 0;
+	fillSpecs();
+}
 
 bool webserv::Tokenizer::isEOF() {
 	return _pos >= _input.length();
