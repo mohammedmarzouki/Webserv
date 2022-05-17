@@ -32,11 +32,6 @@ std::string webserv::Regex::match(std::string &regex, std::string &string) {
 	else if (regex == ";")
 		return match_semicolon(string);
 
-	else if (regex == "number")
-		return match_number(string);
-	else if (regex == "string")
-		return match_string(string);
-
 	else if (regex == "server")
 		return match_server(string);
 	else if (regex == "listen")
@@ -45,6 +40,11 @@ std::string webserv::Regex::match(std::string &regex, std::string &string) {
 		return match_server_name(string);
 	else if (regex == "root")
 		return match_root(string);
+
+	else if (regex == "number")
+		return match_number(string);
+	else if (regex == "string")
+		return match_string(string);
 	else
 		return "null";
 }
@@ -82,6 +82,27 @@ std::string webserv::Regex::match_semicolon(std::string &string) {
 	return "null";
 }
 
+std::string webserv::Regex::match_server(std::string &string) {
+	std::string server = string.substr(0, 6);
+	if (server == "server") return server;
+	return "null";
+}
+std::string webserv::Regex::match_listen(std::string &string) {
+	std::string listen = string.substr(0, 6);
+	if (listen == "listen") return listen;
+	return "null";
+}
+std::string webserv::Regex::match_server_name(std::string &string) {
+	std::string server_name = string.substr(0, 11);
+	if (server_name == "server_name") return server_name;
+	return "null";
+}
+std::string webserv::Regex::match_root(std::string &string) {
+	std::string root = string.substr(0, 4);
+	if (root == "root") return root;
+	return "null";
+}
+
 std::string webserv::Regex::match_number(std::string &string) {
 	if (isdigit(string[0])) {
 		std::string::size_type pos = string.find_first_not_of("0123456789");
@@ -109,27 +130,6 @@ std::string webserv::Regex::match_string(std::string &string) {
 	return "null";
 }
 
-std::string webserv::Regex::match_server(std::string &string) {
-	std::string server = string.substr(0, 6);
-	if (server == "server") return server;
-	return "null";
-}
-std::string webserv::Regex::match_listen(std::string &string) {
-	std::string listen = string.substr(0, 6);
-	if (listen == "listen") return listen;
-	return "null";
-}
-std::string webserv::Regex::match_server_name(std::string &string) {
-	std::string server_name = string.substr(0, 11);
-	if (server_name == "server_name") return server_name;
-	return "null";
-}
-std::string webserv::Regex::match_root(std::string &string) {
-	std::string match_root = string.substr(0, 10);
-	if (match_root == "match_root") return match_root;
-	return "null";
-}
-
 //////////////////////////////////////////////////
 // Server class
 //////////////////////////////////////////////////
@@ -139,9 +139,7 @@ webserv::Server::~Server() {}
 std::string webserv::Server::get_listen() { return _listen; }
 std::string webserv::Server::get_server_name() { return _server_name; }
 std::string webserv::Server::get_root() { return _root; }
-std::string webserv::Server::get_error_page() { return _error_page; }
 
 void	webserv::Server::set_listen(std::string listen) { _listen = listen; }
 void	webserv::Server::set_server_name(std::string server_name) { _server_name = server_name; }
 void	webserv::Server::set_root(std::string root) { _root = root; }
-void	webserv::Server::set_error_page(std::string error_page) { _error_page = error_page; }

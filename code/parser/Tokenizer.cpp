@@ -16,14 +16,13 @@ void webserv::Tokenizer::fill_specs() {
 	_specs.push_back("}");
 	_specs.push_back(";");
 
-	_specs.push_back("number");
-	_specs.push_back("string");
-
-	_specs.push_back("server");
 	_specs.push_back("listen");
 	_specs.push_back("server_name");
 	_specs.push_back("root");
-	_specs.push_back("error_page");
+	_specs.push_back("server");
+
+	_specs.push_back("number");
+	_specs.push_back("string");
 }
 
 bool webserv::Tokenizer::is_EOF() { return _pos >= _input.length(); }

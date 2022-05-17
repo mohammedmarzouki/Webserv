@@ -41,13 +41,13 @@ namespace webserv
 			std::string match_end_block(std::string &);
 			std::string match_semicolon(std::string &);
 
-			std::string match_number(std::string &);
-			std::string match_string(std::string &);
-
 			std::string match_server(std::string &);
 			std::string match_listen(std::string &);
 			std::string match_server_name(std::string &);
 			std::string match_root(std::string &);
+
+			std::string match_number(std::string &);
+			std::string match_string(std::string &);
 	};
 
 	//////////////////////////////////////////////////
@@ -67,11 +67,9 @@ namespace webserv
 			void set_listen(std::string);
 			void set_server_name(std::string);
 			void set_root(std::string);
-			void set_error_page(std::string);
 			std::string get_listen();
 			std::string get_server_name();
 			std::string get_root();
-			std::string get_error_page();
 	};
 
 	//////////////////////////////////////////////////
