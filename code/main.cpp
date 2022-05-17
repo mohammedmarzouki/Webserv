@@ -1,8 +1,10 @@
-#include "parser/Parser.hpp"
+#include "webserv.hpp"
 
 int main(void)
 {
-	webserv::Parser parser;
-	parser.parse("   #hhhh\n{Hello asdf  ;  }#ggggg");
+	std::string configFile = "   server{listen \"80\";server_name wwwexamplecom;root varwwwhtml;}";
+	webserv::Parser parser(configFile);
+	parser.parse();
+	parser.print_servers();
 	return 0;
 }

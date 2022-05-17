@@ -1,67 +1,60 @@
 #include "Tokenizer.hpp"
 
+//////////////////////////////////////////////////
 // Tokenizer class
+//////////////////////////////////////////////////
 webserv::Tokenizer::Tokenizer() {}
-
+webserv::Tokenizer::Tokenizer(std::string input)
+	: _input(input), _pos(0) { fill_specs(); }
 webserv::Tokenizer::~Tokenizer() {}
 
-void webserv::Tokenizer::init(std::string input)
-{
-	_input = input;
-	_pos = 0;
-	fillSpecs();
+void webserv::Tokenizer::fill_specs() {
+	_specs.push_back("whitespace");
+	_specs.push_back("comment");
+
+	_specs.push_back("{");
+	_specs.push_back("}");
+	_specs.push_back(";");
+
+	_specs.push_back("number");
+	_specs.push_back("string");
+
+	_specs.push_back("server");
+	_specs.push_back("listen");
+	_specs.push_back("server_name");
+	_specs.push_back("root");
+	_specs.push_back("error_page");
 }
 
-bool webserv::Tokenizer::isEOF() {
-	return _pos >= _input.length();
-}
+bool webserv::Tokenizer::is_EOF() { return _pos >= _input.length(); }
+bool webserv::Tokenizer::has_next() { return _pos < _input.length(); }
+webserv::Token webserv::Tokenizer::next_token() {
+	if (!has_next())
+		return webserv::Token("null", "null");
 
-bool webserv::Tokenizer::hasNext() {
-	return _pos < _input.length();
-}
-
-void webserv::Tokenizer::fillSpecs() {
-	// whitespace
-	_specs.push_back(std::make_pair("whitespace", "null"));
-	// Single line comment
-	_specs.push_back(std::make_pair("comment", "null"));
-	// block
-	_specs.push_back(std::make_pair("block", "block"));
-	// directive
-	_specs.push_back(std::make_pair("directive", "directive"));
-}
-
-webserv::Lookahead webserv::Tokenizer::nextToken()
-{
-	if (!hasNext())
-		return webserv::Lookahead("end", "end");
 	std::string string = _input.substr(_pos);
 
-	std::vector<std::pair<std::string, std::string> >::iterator it = _specs.begin();
+	std::vector<std::string>::iterator it = _specs.begin();
 	for (; it != _specs.end(); it++)
 	{
-		std::string tokenValue = match(it->first, string);
-		if (tokenValue == "null")
-			continue;
+		std::string tokenValue = match(*it, string);
+		if (tokenValue == "null") continue;
 
 		// Should skip token e.g. whitespace or comment
-		if (it->second == "null")
-			return webserv::Tokenizer::nextToken();
+		if (*it == "whitespace" || *it == "comment")
+			return webserv::Tokenizer::next_token();
 
-		return webserv::Lookahead(it->second, tokenValue);
+		return webserv::Token(*it, tokenValue);
 	}
 
-	return webserv::Lookahead("not", "not");
-	// throw new std::exception("Invalid token");
+	throw std::string("Invalid token");
 }
-
 std::string webserv::Tokenizer::match(std::string regexp, std::string string)
 {
 	static webserv::Regex regex;
 
 	std::string matched = regex.match(regexp, string);
-	if (matched == "null")
-		return "null";
+	if (matched == "null") return "null";
 	_pos += matched.length();
 	return matched;
 }
