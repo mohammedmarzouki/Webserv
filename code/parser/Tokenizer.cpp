@@ -8,7 +8,8 @@ webserv::Tokenizer::Tokenizer(std::string input)
 	: _input(input), _pos(0) { fill_specs(); }
 webserv::Tokenizer::~Tokenizer() {}
 
-void webserv::Tokenizer::fill_specs() {
+void webserv::Tokenizer::fill_specs()
+{
 	_specs.push_back("whitespace");
 	_specs.push_back("comment");
 
@@ -27,7 +28,8 @@ void webserv::Tokenizer::fill_specs() {
 
 bool webserv::Tokenizer::is_EOF() { return _pos >= _input.length(); }
 bool webserv::Tokenizer::has_next() { return _pos < _input.length(); }
-webserv::Token webserv::Tokenizer::next_token() {
+webserv::Token webserv::Tokenizer::next_token()
+{
 	if (!has_next())
 		return webserv::Token("null", "null");
 
@@ -37,7 +39,8 @@ webserv::Token webserv::Tokenizer::next_token() {
 	for (; it != _specs.end(); it++)
 	{
 		std::string tokenValue = match(*it, string);
-		if (tokenValue == "null") continue;
+		if (tokenValue == "null")
+			continue;
 
 		// Should skip token e.g. whitespace or comment
 		if (*it == "whitespace" || *it == "comment")
@@ -53,7 +56,8 @@ std::string webserv::Tokenizer::match(std::string regexp, std::string string)
 	static webserv::Regex regex;
 
 	std::string matched = regex.match(regexp, string);
-	if (matched == "null") return "null";
+	if (matched == "null")
+		return "null";
 	_pos += matched.length();
 	return matched;
 }
