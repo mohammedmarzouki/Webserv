@@ -11,14 +11,31 @@ int main(void)
 	// } {
 	// 	// Processing
 	// } {
+	try
+	{
 		std::vector<webserv::Server> servers;
-		std::string configFile = "   server{listen \"80\";server_name wwwexamplecom;    root varwwwhtml;    }";
-		std::string configFile2 = "   server{listen \"8000\";server_name wwwwwwwwww;    root varvarvar;    }";
+		std::string configFile = "\
+		server {\
+			listen \"80\";\
+			server_name wwwexamplecom;\
+			root varwwwhtml;\
+			location {\
+				root secondseconde;\
+				path thisthis;\
+			}\
+			location {\
+				root third_third;\
+				path thatthat;\
+			}\
+		}";
 		webserv::Parser parser;
 		servers = parser.parse(configFile);
 		webserv::print_servers(servers);
-		servers = parser.parse(configFile2);
-		webserv::print_servers(servers);
+	}
+	catch (std::string &err)
+	{
+		std::cout << err << std::endl;
+	}
 	// }
 	return 0;
 }

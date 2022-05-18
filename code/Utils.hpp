@@ -48,8 +48,30 @@ namespace webserv
 		std::string match_server_name(std::string &);
 		std::string match_root(std::string &);
 
+		std::string match_location(std::string &);
+		std::string match_path(std::string &);
+
 		std::string match_number(std::string &);
 		std::string match_string(std::string &);
+	};
+
+	//////////////////////////////////////////////////
+	// Location class
+	//////////////////////////////////////////////////
+	class Location
+	{
+	private:
+		std::string _path;
+		std::string _root;
+
+	public:
+		Location();
+		~Location();
+
+		void set_path(std::string);
+		void set_root(std::string);
+		std::string get_path();
+		std::string get_root();
 	};
 
 	//////////////////////////////////////////////////
@@ -61,7 +83,7 @@ namespace webserv
 		std::string _listen;
 		std::string _server_name;
 		std::string _root;
-		std::string _error_page;
+		std::vector<Location> _locations;
 
 	public:
 		Server();
@@ -70,16 +92,11 @@ namespace webserv
 		void set_listen(std::string);
 		void set_server_name(std::string);
 		void set_root(std::string);
+		void add_location(Location);
 		std::string get_listen();
 		std::string get_server_name();
 		std::string get_root();
-	};
-
-	//////////////////////////////////////////////////
-	// Location class
-	//////////////////////////////////////////////////
-	class Location
-	{
+		std::vector<Location> get_locations();
 	};
 
 	//////////////////////////////////////////////////

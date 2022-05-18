@@ -22,6 +22,9 @@ void webserv::Tokenizer::fill_specs()
 	_specs.push_back("root");
 	_specs.push_back("server");
 
+	_specs.push_back("location");
+	_specs.push_back("path");
+
 	_specs.push_back("number");
 	_specs.push_back("string");
 }

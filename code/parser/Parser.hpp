@@ -24,7 +24,9 @@ namespace webserv
 		Token eat(std::string);
 
 		webserv::Server server();
-		void server_derectives(webserv::Server &);
+		void server_directives(webserv::Server &);
+		webserv::Location location();
+		void location_directives(webserv::Location &);
 	};
 
 } // namespace webserv
