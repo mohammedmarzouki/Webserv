@@ -219,22 +219,31 @@ void webserv::print_servers(std::vector<webserv::Server> &servers)
 {
 	std::vector<webserv::Server>::iterator it = servers.begin();
 
+	int i = 1;
 	while (it != servers.end())
 	{
 		std::vector<webserv::Location>::iterator it2 = (*it).get_locations().begin();
 
+		std::cout << "____________________SERVER " << i << "____________________" << std::endl;
 		std::cout << "listen:		" << it->get_listen() << std::endl;
 		std::cout << "server name:	" << it->get_server_name() << std::endl;
 		std::cout << "root:		" << it->get_root() << std::endl;
 
+		int j = 1;
 		while (it2 != (*it).get_locations().end())
 		{
-			std::cout << "location:" << std::endl;
+			std::cout << "----------------------------------------" << std::endl;
+			std::cout << "location: " << j << std::endl;
 			std::cout << "	path:		" << it2->get_path() << std::endl;
 			std::cout << "	root:		" << it2->get_root() << std::endl;
+
+			j++;
 			it2++;
 		}
 
+		std::cout << "____________________SERVER " << i << "____________________" << std::endl;
+		std::cout << std::endl << std::endl << std::endl;
+		i++;
 		it++;
 	}
 }

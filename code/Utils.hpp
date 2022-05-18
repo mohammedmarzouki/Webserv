@@ -2,6 +2,7 @@
 #define UTILS_HPP
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 namespace webserv
