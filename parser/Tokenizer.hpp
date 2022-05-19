@@ -1,7 +1,7 @@
 #if !defined(TOKENIZER_HPP)
 #define TOKENIZER_HPP
 
-#include "../Utils.hpp"
+#include "Utils.hpp"
 
 namespace webserv
 {
