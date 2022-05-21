@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv)
 {
-	std::string config_file(argv[1]);
+	std::string config_file;
 	std::vector<webserv::Server> servers;
 
 	//////////////////////////////////////////////////
@@ -11,11 +11,13 @@ int main(int argc, char **argv)
 	{
 		if (argc == 2)
 		{
+			config_file = argv[1];
 			if (config_file == "--help" || config_file == "-h")
 			{
-				std::cout << "Usage: " << argv[0] << " [configuration file]" << std::endl;
+				PRINT("Usage: " << argv[0] << " [configuration file]");
 				return 0;
 			}
+
 			std::ifstream in_stream(config_file.c_str());
 			if (in_stream)
 			{
@@ -26,15 +28,15 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				std::cerr << "Error: Could not open file " << argv[1] << std::endl;
+				PRINT_ERR("Error: Could not open file " << argv[1]);
 				return 1;
 			}
 			in_stream.close();
 		}
 		else
 		{
-			std::cout << "Usage: " << argv[0] << " [configuration file]" << std::endl;
-			std::cout << "Usage: " << argv[0] << " --help [-h]" << std::endl;
+			PRINT("Usage: " << argv[0] << " [configuration file]");
+			PRINT("Usage: " << argv[0] << " --help [-h]");
 		}
 	}
 
@@ -50,7 +52,7 @@ int main(int argc, char **argv)
 		}
 		catch (std::string &err)
 		{
-			std::cout << err << std::endl;
+			PRINT_ERR(err);
 		}
 	}
 
