@@ -16,7 +16,8 @@ INCLUDES = webserv.hpp \
 SRCS = main.cpp \
 		parser/Parser.cpp \
 		parser/Tokenizer.cpp \
-		parser/Utils.cpp
+		parser/Utils.cpp \
+		tools/tools.cpp
 
 all: $(NAME)
 

@@ -1,6 +1,9 @@
 #if !defined(WEBSERV_HPP)
 #define WEBSERV_HPP
 
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+
 #define PRINT_ERR(err)  std::cerr << err << std::endl
 #define PRINT(msg)  std::cout << msg << std::endl
 
@@ -16,6 +19,10 @@
 #include <sys/types.h>  // kqueue(2)
 
 #include "parser/Parser.hpp"
+
+void    print_help(int argc , char **argv, std::string &file);
+void    exit_err(std::string err);
+void	read_config(std::string &config_file);
 
 #endif // WEBSERV_HPP
 
