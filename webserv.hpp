@@ -20,6 +20,7 @@
 
 #include "parser/Parser.hpp"
 
+//tools
 void    print_help(int argc , char **argv, std::string &file);
 void    exit_err(std::string err);
 void	read_config(std::string &config_file);
