@@ -4,7 +4,7 @@ GREEN = \033[1;32m
 ORANGE = \033[1;33m
 
 COMPILER = clang++
-FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g
 
 NAME = webserv
 
@@ -29,7 +29,7 @@ clean:
 	@echo "$(GREEN)Clean successful$(NC)"
 
 fclean: clean
-	@rm -f $(NAME)
+	@rm -rf $(NAME) $(NAME).dSYM .vscode
 	@echo "$(GREEN)Full clean successful$(NC)"
 
 re: fclean all

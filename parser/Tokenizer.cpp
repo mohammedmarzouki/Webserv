@@ -17,14 +17,23 @@ void webserv::Tokenizer::fill_specs()
 	_specs.push_back("}");
 	_specs.push_back(";");
 
-	_specs.push_back("listen");
+	_specs.push_back("host");
+	_specs.push_back("port");
 	_specs.push_back("server_name");
-	_specs.push_back("root");
+	_specs.push_back("error_page");
+	_specs.push_back("client_max_body_size");
 	_specs.push_back("server");
 
 	_specs.push_back("location");
-	_specs.push_back("path");
+	_specs.push_back("uri");
+	_specs.push_back("root");
+	_specs.push_back("index");
+	_specs.push_back("allow_methods");
+	_specs.push_back("redirect");
+	_specs.push_back("autoindex");
+	_specs.push_back("index");
 
+	_specs.push_back("ipv4");
 	_specs.push_back("number");
 	_specs.push_back("string");
 }

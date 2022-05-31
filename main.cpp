@@ -15,10 +15,12 @@ int main(int argc, char **argv)
 	// Parsing
 	//////////////////////////////////////////////////
 	webserv::Parser parser;
-	try{
+	try
+	{
 		servers = parser.parse(config_file);
 	}
-	catch (std::string &err) {
+	catch (std::string &err)
+	{
 		exit_err(err);
 	}
 	webserv::print_servers(servers);

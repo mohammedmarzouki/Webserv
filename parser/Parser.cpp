@@ -42,12 +42,22 @@ webserv::Server webserv::Parser::server()
 }
 void webserv::Parser::server_directives(webserv::Server &server)
 {
-	if (_lookahead.get_type() == "listen")
+	if (_lookahead.get_type() == "host")
 	{
-		eat("listen");
-		if (_lookahead.get_type() == "string")
+		eat("host");
+		if (_lookahead.get_type() == "string" || _lookahead.get_type() == "ipv4")
 		{
-			server.set_listen(_lookahead.get_value());
+			server.set_host(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		eat(";");
+	}
+	else if (_lookahead.get_type() == "port")
+	{
+		eat("port");
+		if (_lookahead.get_type() == "number")
+		{
+			server.set_port(_lookahead.get_value());
 			eat(_lookahead.get_type());
 		}
 		eat(";");
@@ -55,19 +65,35 @@ void webserv::Parser::server_directives(webserv::Server &server)
 	else if (_lookahead.get_type() == "server_name")
 	{
 		eat("server_name");
-		if (_lookahead.get_type() == "string")
+		while (_lookahead.get_type() != ";" && _lookahead.get_type() == "string")
 		{
-			server.set_server_name(_lookahead.get_value());
+			server.add_server_name(_lookahead.get_value());
 			eat(_lookahead.get_type());
 		}
 		eat(";");
 	}
-	else if (_lookahead.get_type() == "root")
+	else if (_lookahead.get_type() == "error_page")
 	{
-		eat("root");
-		if (_lookahead.get_type() == "string")
+		eat("error_page");
+		while (_lookahead.get_value() != ";" && (_lookahead.get_type() == "number" || _lookahead.get_type() == "uri"))
 		{
-			server.set_root(_lookahead.get_value());
+			server.add_error_page(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		eat(";");
+	}
+	else if (_lookahead.get_type() == "client_max_body_size")
+	{
+		std::string size;
+
+		eat("client_max_body_size");
+		if (_lookahead.get_type() == "number")
+		{
+			size = _lookahead.get_value();
+			eat(_lookahead.get_type());
+			if (_lookahead.get_type() == "string")
+				size += _lookahead.get_value();
+			server.set_client_max_body_size(size);
 			eat(_lookahead.get_type());
 		}
 		eat(";");
@@ -83,31 +109,61 @@ webserv::Location webserv::Parser::location()
 	webserv::Location location;
 
 	eat("location");
+	eat("uri");
 	eat("{");
 	while (_lookahead.get_value() != "}")
 		location_directives(location);
 	eat("}");
 	return location;
 }
-
 void webserv::Parser::location_directives(webserv::Location &location)
 {
 	if (_lookahead.get_type() == "root")
 	{
 		eat("root");
-		if (_lookahead.get_type() == "string")
+		if (_lookahead.get_type() == "uri")
 		{
 			location.set_root(_lookahead.get_value());
 			eat(_lookahead.get_type());
 		}
 		eat(";");
 	}
-	else if (_lookahead.get_type() == "path")
+	else if (_lookahead.get_type() == "index")
 	{
-		eat("path");
+		eat("index");
+		while (_lookahead.get_value() != ";" && _lookahead.get_type() == "string")
+		{
+			location.add_index(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		eat(";");
+	}
+	else if (_lookahead.get_type() == "allow_methods")
+	{
+		eat("allow_methods");
+		while (_lookahead.get_value() != ";" && _lookahead.get_type() == "string")
+		{
+			location.add_allow_methods(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		eat(";");
+	}
+	else if (_lookahead.get_type() == "redirect")
+	{
+		eat("redirect");
+		while (_lookahead.get_value() != ";" && (_lookahead.get_type() == "number" || _lookahead.get_type() == "string"))
+		{
+			location.add_return(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		eat(";");
+	}
+	else if (_lookahead.get_type() == "autoindex")
+	{
+		eat("autoindex");
 		if (_lookahead.get_type() == "string")
 		{
-			location.set_path(_lookahead.get_value());
+			location.set_autoindex(_lookahead.get_value());
 			eat(_lookahead.get_type());
 		}
 		eat(";");

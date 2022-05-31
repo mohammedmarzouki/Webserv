@@ -1,17 +1,17 @@
 # Webserv
 
-<!-- $ ./webserv -h
+```
+$ ./webserv -h
 
 Usage: webserv [options] [config_file]
 
 Options:
-  -h, --help         : this help text
-  -l, --log [LEVEL]  : set log level (between 0 and 2)
-  -t, --test         : test config and exit
-  -u, --uri          : keep location uri on rooting (similar to nginx) -->
+	-h, --help         : this help text
+	-l, --log [LEVEL]  : set log level (between 0 and 2)
+	-t, --test         : test config and exit
+	-u, --uri          : keep location uri on rooting (similar to nginx)
+```
 
-
-<!-- https://github.com/cclaude42/webserv -->
 ## Resources
 ### Server setup
 
