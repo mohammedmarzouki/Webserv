@@ -105,71 +105,63 @@ std::string webserv::Regex::match_semicolon(std::string &string)
 	return string[0] == ';' ? ";" : "NULL";
 }
 
+static std::string match_keyword(std::string &string, std::string keyword, int len)
+{
+	std::string from_string = string.substr(0, len);
+	return (from_string == keyword && isspace(string[len])) ? keyword : "NULL";
+}
 std::string webserv::Regex::match_server(std::string &string)
 {
-	std::string server = string.substr(0, 6);
-	return (server == "server" && isspace(string[6])) ? server : "NULL";
+	return match_keyword(string, "server", 6);
 }
 std::string webserv::Regex::match_host(std::string &string)
 {
-	std::string host = string.substr(0, 4);
-	return (host == "host" && isspace(string[4])) ? host : "NULL";
+	return match_keyword(string, "host", 4);
 }
 std::string webserv::Regex::match_port(std::string &string)
 {
-	std::string port = string.substr(0, 4);
-	return (port == "port" && isspace(string[4])) ? port : "NULL";
+	return match_keyword(string, "port", 4);
 }
 std::string webserv::Regex::match_server_name(std::string &string)
 {
-	std::string server_name = string.substr(0, 11);
-	return (server_name == "server_name" && isspace(string[11])) ? server_name : "NULL";
+	return match_keyword(string, "server_name", 11);
 }
 std::string webserv::Regex::match_error_page(std::string &string)
 {
-	std::string error_page = string.substr(0, 10);
-	return (error_page == "error_page" && isspace(string[10])) ? error_page : "NULL";
+	return match_keyword(string, "error_page", 10);
 }
 std::string webserv::Regex::match_client_max_body_size(std::string &string)
 {
-	std::string client_max_body_size = string.substr(0, 20);
-	return (client_max_body_size == "client_max_body_size" && isspace(string[20])) ? client_max_body_size : "NULL";
+	return match_keyword(string, "client_max_body_size", 20);
 }
 
 std::string webserv::Regex::match_location(std::string &string)
 {
-	std::string location = string.substr(0, 8);
-	return (location == "location" && isspace(string[8])) ? location : "NULL";
+	return match_keyword(string, "location", 8);
 }
 std::string webserv::Regex::match_root(std::string &string)
 {
-	std::string root = string.substr(0, 4);
-	return (root == "root" && isspace(string[4])) ? root : "NULL";
+	return match_keyword(string, "root", 4);
 }
 std::string webserv::Regex::match_index(std::string &string)
 {
-	std::string index = string.substr(0, 5);
-	return (index == "index" && isspace(string[5])) ? index : "NULL";
+	return match_keyword(string, "index", 5);
 }
 std::string webserv::Regex::match_allow_methods(std::string &string)
 {
-	std::string allow_methods = string.substr(0, 13);
-	return (allow_methods == "allow_methods" && isspace(string[13])) ? allow_methods : "NULL";
+	return match_keyword(string, "allow_methods", 13);
 }
 std::string webserv::Regex::match_return(std::string &string)
 {
-	std::string redirect = string.substr(0, 6);
-	return (redirect == "return" && isspace(string[6])) ? redirect : "NULL";
+	return match_keyword(string, "return", 6);
 }
 std::string webserv::Regex::match_autoindex(std::string &string)
 {
-	std::string autoindex = string.substr(0, 9);
-	return (autoindex == "autoindex" && isspace(string[9])) ? autoindex : "NULL";
+	return match_keyword(string, "autoindex", 9);
 }
 std::string webserv::Regex::match_cgi_pass(std::string &string)
 {
-	std::string cgi_pass = string.substr(0, 8);
-	return (cgi_pass == "cgi_pass" && isspace(string[8])) ? cgi_pass : "NULL";
+	return match_keyword(string, "cgi_pass", 8);
 }
 
 std::string webserv::Regex::match_ipv4(std::string &string)
