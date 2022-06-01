@@ -58,6 +58,7 @@ namespace webserv
 		std::string match_allow_methods(std::string &);
 		std::string match_return(std::string &);
 		std::string match_autoindex(std::string &);
+		std::string match_cgi_pass(std::string &);
 
 		std::string match_ipv4(std::string &);
 		std::string match_number(std::string &);
@@ -76,6 +77,7 @@ namespace webserv
 		std::vector<std::string> _allow_methods;
 		std::vector<std::string> _return;
 		std::string _autoindex;
+		std::string _cgi_pass;
 
 	public:
 		Location();
@@ -87,12 +89,14 @@ namespace webserv
 		void add_allow_methods(std::string);
 		void add_return(std::string);
 		void set_autoindex(std::string);
+		void set_cgi_pass(std::string);
 		std::string get_uri() const;
 		std::string get_root() const;
 		std::vector<std::string> get_index() const;
 		std::vector<std::string> get_allow_methods() const;
 		std::vector<std::string> get_return() const;
 		std::string get_autoindex() const;
+		std::string get_cgi_pass() const;
 	};
 
 	//////////////////////////////////////////////////

@@ -168,6 +168,16 @@ void webserv::Parser::location_directives(webserv::Location &location)
 		}
 		eat(";");
 	}
+	else if (_lookahead.get_type() == "cgi_pass")
+	{
+		eat("cgi_pass");
+		if (_lookahead.get_type() == "string")
+		{
+			location.set_cgi_pass(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		eat(";");
+	}
 	else
 		throw std::string("Unexpected token: " + _lookahead.get_value());
 }

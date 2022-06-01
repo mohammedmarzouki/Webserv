@@ -60,8 +60,8 @@ std::string webserv::Regex::match(std::string &regex, std::string &string)
 		return match_return(string);
 	else if (regex == "autoindex")
 		return match_autoindex(string);
-	else if (regex == "index")
-		return match_index(string);
+	else if (regex == "cgi_pass")
+		return match_cgi_pass(string);
 
 	else if (regex == "ipv4")
 		return match_ipv4(string);
@@ -151,7 +151,7 @@ std::string webserv::Regex::match_uri(std::string &string)
 {
 	if (string[0] == '/')
 	{
-		std::string::size_type pos = string.find_first_not_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./");
+		std::string::size_type pos = string.find_first_not_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./_");
 		if (pos != std::string::npos)
 			return string.substr(0, pos);
 		else
@@ -183,6 +183,11 @@ std::string webserv::Regex::match_autoindex(std::string &string)
 {
 	std::string autoindex = string.substr(0, 9);
 	return autoindex == "autoindex" ? autoindex : "null";
+}
+std::string webserv::Regex::match_cgi_pass(std::string &string)
+{
+	std::string cgi_pass = string.substr(0, 8);
+	return cgi_pass == "cgi_pass" ? cgi_pass : "null";
 }
 
 std::string webserv::Regex::match_ipv4(std::string &string)
@@ -249,6 +254,7 @@ void webserv::Location::add_index(std::string index) { _index.push_back(index); 
 void webserv::Location::add_allow_methods(std::string allow_methods) { _allow_methods.push_back(allow_methods); }
 void webserv::Location::add_return(std::string redirect) { _return.push_back(redirect); }
 void webserv::Location::set_autoindex(std::string autoindex) { _autoindex = autoindex; }
+void webserv::Location::set_cgi_pass(std::string cgi_pass) { _cgi_pass = cgi_pass; }
 
 std::string webserv::Location::get_uri() const { return _uri; }
 std::string webserv::Location::get_root() const { return _root; }
@@ -256,6 +262,7 @@ std::vector<std::string> webserv::Location::get_index() const { return _index; }
 std::vector<std::string> webserv::Location::get_allow_methods() const { return _allow_methods; }
 std::vector<std::string> webserv::Location::get_return() const { return _return; }
 std::string webserv::Location::get_autoindex() const { return _autoindex; }
+std::string webserv::Location::get_cgi_pass() const { return _cgi_pass; }
 
 //////////////////////////////////////////////////
 // Server class
@@ -313,6 +320,7 @@ void webserv::print_servers(std::vector<webserv::Server> &servers)
 			std::cout << "	allow_methods:		"; webserv::print_vector(it2->get_allow_methods());
 			std::cout << "	return:		"; webserv::print_vector(it2->get_return());
 			std::cout << "	autoindex:		" << it2->get_autoindex() << std::endl;
+			std::cout << "	cgi_pass:		" << it2->get_cgi_pass() << std::endl;
 
 			j++;
 			it2++;
