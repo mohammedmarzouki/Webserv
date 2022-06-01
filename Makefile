@@ -26,10 +26,11 @@ $(NAME): $(INCLUDES) $(SRCS)
 	@echo "$(GREEN)Compilation successful$(NC)"
 
 clean:
+	@rm -rf $(NAME).dSYM .vscode
 	@echo "$(GREEN)Clean successful$(NC)"
 
 fclean: clean
-	@rm -rf $(NAME) $(NAME).dSYM .vscode
+	@rm -f $(NAME)
 	@echo "$(GREEN)Full clean successful$(NC)"
 
 re: fclean all
