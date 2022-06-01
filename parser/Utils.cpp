@@ -5,7 +5,15 @@
 //////////////////////////////////////////////////
 webserv::Token::Token() {}
 webserv::Token::Token(std::string type, std::string value) : _type(type), _value(value) {}
+webserv::Token::Token(const Token &token) : _type(token._type), _value(token._value) {}
 webserv::Token::~Token() {}
+
+webserv::Token &webserv::Token::operator=(const Token &token)
+{
+	_type = token._type;
+	_value = token._value;
+	return *this;
+}
 
 void webserv::Token::set_type(std::string type) { _type = type; }
 void webserv::Token::set_value(std::string value) { _value = value; }
@@ -236,7 +244,23 @@ std::string webserv::Regex::match_string(std::string &string)
 // Location class
 //////////////////////////////////////////////////
 webserv::Location::Location() {}
+webserv::Location::Location(const Location &src)
+{
+	*this = src;
+}
 webserv::Location::~Location() {}
+
+webserv::Location &webserv::Location::operator=(const Location &src)
+{
+	this->_uri = src._uri;
+	this->_root = src._root;
+	this->_index = src._index;
+	this->_allow_methods = src._allow_methods;
+	this->_return = src._return;
+	this->_autoindex = src._autoindex;
+	this->_cgi_pass = src._cgi_pass;
+	return *this;
+}
 
 void webserv::Location::set_uri(std::string uri) { _uri = uri; }
 void webserv::Location::set_root(std::string root) { _root = root; }
@@ -258,7 +282,22 @@ std::string webserv::Location::get_cgi_pass() const { return _cgi_pass; }
 // Server class
 //////////////////////////////////////////////////
 webserv::Server::Server() {}
+webserv::Server::Server(const Server &src)
+{
+	*this = src;
+}
 webserv::Server::~Server() {}
+
+webserv::Server &webserv::Server::operator=(const Server &src)
+{
+	this->_host = src._host;
+	this->_port = src._port;
+	this->_server_name = src._server_name;
+	this->_error_page = src._error_page;
+	this->_client_max_body_size = src._client_max_body_size;
+	this->_locations = src._locations;
+	return *this;
+}
 
 void webserv::Server::set_host(std::string host) { _host = host; }
 void webserv::Server::set_port(std::string port) { _port = port; }
@@ -290,7 +329,8 @@ void webserv::print_servers(std::vector<webserv::Server> &servers)
 	int i = 1;
 	while (it != servers.end())
 	{
-		std::vector<webserv::Location>::iterator it2 = (*it).get_locations().begin();
+		std::vector<webserv::Location> locations = it->get_locations();
+		std::vector<webserv::Location>::iterator it2 = locations.begin();
 
 		std::cout << "____________________SERVER " << i << "____________________" << std::endl;
 		std::cout << "host:			" << it->get_host() << std::endl;
@@ -302,7 +342,7 @@ void webserv::print_servers(std::vector<webserv::Server> &servers)
 		std::cout << "client_max_body_size:	" << it->get_client_max_body_size() << std::endl;
 
 		int j = 1;
-		while (it2 != (*it).get_locations().end())
+		while (it2 != locations.end())
 		{
 			std::cout << "----------------------------------------" << std::endl;
 			std::cout << "location: " << j << std::endl;

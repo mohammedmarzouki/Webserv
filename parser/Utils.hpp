@@ -19,7 +19,10 @@ namespace webserv
 	public:
 		Token();
 		Token(std::string, std::string);
+		Token(const Token &);
 		~Token();
+
+		Token &operator=(const Token &);
 
 		void set_type(std::string);
 		void set_value(std::string);
@@ -81,7 +84,10 @@ namespace webserv
 
 	public:
 		Location();
+		Location(const Location &);
 		~Location();
+
+		Location &operator=(const Location &);
 
 		void set_uri(std::string);
 		void set_root(std::string);
@@ -114,7 +120,10 @@ namespace webserv
 
 	public:
 		Server();
+		Server(const Server &);
 		~Server();
+
+		Server &operator=(const Server &);
 
 		void set_host(std::string);
 		void set_port(std::string);
