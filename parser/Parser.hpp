@@ -11,22 +11,24 @@ namespace webserv
 	class Parser
 	{
 	private:
-		std::string _configFile;
+		std::string _config_file;
 		webserv::Tokenizer _tokenizer;
 		webserv::Token _lookahead;
 		std::vector<webserv::Server> _servers;
 
 	public:
 		Parser();
+		Parser(std::string);
 		~Parser();
 
-		std::vector<webserv::Server> parse(std::string);
 		Token eat(std::string);
 
 		webserv::Server server();
 		void server_directives(webserv::Server &);
 		webserv::Location location();
 		void location_directives(webserv::Location &);
+
+		std::vector<webserv::Server> get_servers() const;
 	};
 
 } // namespace webserv

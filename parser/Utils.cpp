@@ -168,7 +168,7 @@ std::string webserv::Regex::match_ipv4(std::string &string)
 {
 	if (isdigit(string[0]))
 	{
-		std::string::size_type pos = string.find_first_not_of("0123456789.");
+		std::string::size_type pos = string.find_first_not_of(".0123456789");
 		if (pos != std::string::npos)
 		{
 			std::string address = string.substr(0, pos);

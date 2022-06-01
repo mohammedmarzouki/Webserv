@@ -4,18 +4,15 @@
 // Parser class
 //////////////////////////////////////////////////
 webserv::Parser::Parser() {}
-webserv::Parser::~Parser() {}
-
-std::vector<webserv::Server> webserv::Parser::parse(std::string configFile)
-{
-	_configFile = configFile;
-	_tokenizer = webserv::Tokenizer(_configFile);
+webserv::Parser::Parser(std::string config_file) {
+	_config_file = config_file;
+	_tokenizer = webserv::Tokenizer(_config_file);
 	_lookahead = _tokenizer.next_token();
-	_servers.clear();
 	while (_lookahead.get_type() == "server")
 		_servers.push_back(server());
-	return _servers;
 }
+webserv::Parser::~Parser() {}
+
 webserv::Token webserv::Parser::eat(std::string token_type)
 {
 	webserv::Token token = _lookahead;
@@ -180,4 +177,8 @@ void webserv::Parser::location_directives(webserv::Location &location)
 	}
 	else
 		throw std::string("Unexpected token: " + _lookahead.get_value());
+}
+
+std::vector<webserv::Server> webserv::Parser::get_servers() const {
+	return _servers;
 }

@@ -60,7 +60,6 @@ webserv::Token webserv::Tokenizer::next_token()
 
 		return webserv::Token(*it, tokenValue);
 	}
-
 	throw std::string("Invalid token");
 }
 std::string webserv::Tokenizer::match(std::string regexp, std::string string)
