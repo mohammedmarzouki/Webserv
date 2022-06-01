@@ -1,6 +1,10 @@
 # Webserv
 
 ```
+	- Default value of directives on parser
+```
+
+```
 $ ./webserv -h
 
 Usage: webserv [options] [config_file]
