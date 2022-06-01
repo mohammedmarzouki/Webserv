@@ -10,8 +10,8 @@ webserv::Token::~Token() {}
 void webserv::Token::set_type(std::string type) { _type = type; }
 void webserv::Token::set_value(std::string value) { _value = value; }
 
-std::string webserv::Token::get_type() { return _type; }
-std::string webserv::Token::get_value() { return _value; }
+std::string webserv::Token::get_type() const { return _type; }
+std::string webserv::Token::get_value() const { return _value; }
 
 //////////////////////////////////////////////////
 // Regex class
@@ -48,8 +48,6 @@ std::string webserv::Regex::match(std::string &regex, std::string &string)
 
 	else if (regex == "location")
 		return match_location(string);
-	else if (regex == "uri")
-		return match_uri(string);
 	else if (regex == "root")
 		return match_root(string);
 	else if (regex == "index")
@@ -65,12 +63,14 @@ std::string webserv::Regex::match(std::string &regex, std::string &string)
 
 	else if (regex == "ipv4")
 		return match_ipv4(string);
+	else if (regex == "uri")
+		return match_uri(string);
 	else if (regex == "number")
 		return match_number(string);
 	else if (regex == "string")
 		return match_string(string);
 	else
-		return "null";
+		return "NULL";
 }
 
 std::string webserv::Regex::match_whitespace(std::string &string)
@@ -78,116 +78,98 @@ std::string webserv::Regex::match_whitespace(std::string &string)
 	if (isspace(string[0]))
 	{
 		std::string::size_type pos = string.find_first_not_of(" \t\n");
-		if (pos != std::string::npos)
-			return string.substr(0, pos);
-		else
-			return string;
+		return string.substr(0, pos); // if pos != string::npos it returns until no more whitespace else it returns the whole string
 	}
-	return "null";
+	return "NULL";
 }
 std::string webserv::Regex::match_comment(std::string &string)
 {
 	if (string[0] == '#')
 	{
 		std::string::size_type pos = string.find("\n");
-		if (pos != std::string::npos)
-			return string.substr(0, pos);
-		else
-			return string;
+		return string.substr(0, pos);
 	}
-	return "null";
+	return "NULL";
 }
 
 std::string webserv::Regex::match_start_block(std::string &string)
 {
-	return string[0] == '{' ? string.substr(0, 1) : "null";
+	return string[0] == '{' ? "{" : "NULL";
 }
 std::string webserv::Regex::match_end_block(std::string &string)
 {
-	return string[0] == '}' ? string.substr(0, 1) : "null";
+	return string[0] == '}' ? "}" : "NULL";
 }
 std::string webserv::Regex::match_semicolon(std::string &string)
 {
-	return string[0] == ';' ? string.substr(0, 1) : "null";
+	return string[0] == ';' ? ";" : "NULL";
 }
 
 std::string webserv::Regex::match_server(std::string &string)
 {
 	std::string server = string.substr(0, 6);
-	return server == "server" ? server : "null";
+	return (server == "server" && isspace(string[6])) ? server : "NULL";
 }
 std::string webserv::Regex::match_host(std::string &string)
 {
 	std::string host = string.substr(0, 4);
-	return host == "host" ? host : "null";
+	return (host == "host" && isspace(string[4])) ? host : "NULL";
 }
 std::string webserv::Regex::match_port(std::string &string)
 {
 	std::string port = string.substr(0, 4);
-	return port == "port" ? port : "null";
+	return (port == "port" && isspace(string[4])) ? port : "NULL";
 }
 std::string webserv::Regex::match_server_name(std::string &string)
 {
 	std::string server_name = string.substr(0, 11);
-	return server_name == "server_name" ? server_name : "null";
+	return (server_name == "server_name" && isspace(string[11])) ? server_name : "NULL";
 }
 std::string webserv::Regex::match_error_page(std::string &string)
 {
 	std::string error_page = string.substr(0, 10);
-	return error_page == "error_page" ? error_page : "null";
+	return (error_page == "error_page" && isspace(string[10])) ? error_page : "NULL";
 }
 std::string webserv::Regex::match_client_max_body_size(std::string &string)
 {
 	std::string client_max_body_size = string.substr(0, 20);
-	return client_max_body_size == "client_max_body_size" ? client_max_body_size : "null";
+	return (client_max_body_size == "client_max_body_size" && isspace(string[20])) ? client_max_body_size : "NULL";
 }
 
 std::string webserv::Regex::match_location(std::string &string)
 {
 	std::string location = string.substr(0, 8);
-	return location == "location" ? location : "null";
-}
-std::string webserv::Regex::match_uri(std::string &string)
-{
-	if (string[0] == '/')
-	{
-		std::string::size_type pos = string.find_first_not_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./_");
-		if (pos != std::string::npos)
-			return string.substr(0, pos);
-		else
-			return string;
-	}
-	return "null";
+	return (location == "location" && isspace(string[8])) ? location : "NULL";
 }
 std::string webserv::Regex::match_root(std::string &string)
 {
 	std::string root = string.substr(0, 4);
-	return root == "root" ? root : "null";
+	return (root == "root" && isspace(string[4])) ? root : "NULL";
 }
 std::string webserv::Regex::match_index(std::string &string)
 {
 	std::string index = string.substr(0, 5);
-	return (index == "index" && isspace(string[5])) ? index : "null";
+	return (index == "index" && isspace(string[5])) ? index : "NULL";
 }
 std::string webserv::Regex::match_allow_methods(std::string &string)
 {
 	std::string allow_methods = string.substr(0, 13);
-	return allow_methods == "allow_methods" ? allow_methods : "null";
+	return (allow_methods == "allow_methods" && isspace(string[13])) ? allow_methods : "NULL";
 }
 std::string webserv::Regex::match_return(std::string &string)
 {
 	std::string redirect = string.substr(0, 6);
-	return redirect == "return" ? redirect : "null";
+	return (redirect == "return" && isspace(string[6])) ? redirect : "NULL";
 }
 std::string webserv::Regex::match_autoindex(std::string &string)
 {
 	std::string autoindex = string.substr(0, 9);
-	return autoindex == "autoindex" ? autoindex : "null";
+	return (autoindex == "autoindex" && isspace(string[9])) ? autoindex : "NULL";
 }
 std::string webserv::Regex::match_cgi_pass(std::string &string)
 {
 	std::string cgi_pass = string.substr(0, 8);
-	return cgi_pass == "cgi_pass" ? cgi_pass : "null";
+	return (cgi_pass == "cgi_pass" && isspace(string[8])) ? cgi_pass : "NULL";
 }
 
 std::string webserv::Regex::match_ipv4(std::string &string)
@@ -195,11 +177,27 @@ std::string webserv::Regex::match_ipv4(std::string &string)
 	if (isdigit(string[0]))
 	{
 		std::string::size_type pos = string.find_first_not_of("0123456789.");
-		std::string address = string.substr(0, pos);
-
-		return address.find(".") != std::string::npos ? address : "null"; // if there is a dot, it is an ipv4 address
+		if (pos != std::string::npos)
+		{
+			std::string address = string.substr(0, pos);
+			return address.find(".") != std::string::npos ? address : "NULL"; // if there is no dot, it isn't an ipv4 address
+		}
+		else
+			throw std::string("Syntax error: file only ends with '}' or comment or whitespace");
 	}
-	return "null";
+	return "NULL";
+}
+std::string webserv::Regex::match_uri(std::string &string)
+{
+	if (string[0] == '/')
+	{
+		std::string::size_type pos = string.find_first_not_of("./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
+		if (pos != std::string::npos)
+			return string.substr(0, pos);
+		else
+			throw std::string("Syntax error: file only ends with '}' or comment or whitespace");
+	}
+	return "NULL";
 }
 std::string webserv::Regex::match_number(std::string &string)
 {
@@ -209,9 +207,9 @@ std::string webserv::Regex::match_number(std::string &string)
 		if (pos != std::string::npos)
 			return string.substr(0, pos);
 		else
-			return string;
+			throw std::string("Syntax error: file only ends with '}' or comment or whitespace");
 	}
-	return "null";
+	return "NULL";
 }
 std::string webserv::Regex::match_string(std::string &string)
 {
@@ -233,13 +231,13 @@ std::string webserv::Regex::match_string(std::string &string)
 	}
 	else if (isalpha(string[0]) || string[0] == '_')
 	{
-		std::string::size_type pos = string.find_first_not_of("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.");
+		std::string::size_type pos = string.find_first_not_of(".0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
 		if (pos != std::string::npos)
 			return string.substr(0, pos);
 		else
-			return string;
+			throw std::string("Syntax error: file only ends with '}' or comment or whitespace");
 	}
-	return "null";
+	return "NULL";
 }
 
 //////////////////////////////////////////////////
@@ -277,7 +275,7 @@ void webserv::Server::add_error_page(std::string error_page) { _error_page.push_
 void webserv::Server::set_client_max_body_size(std::string client_max_body_size) { _client_max_body_size = client_max_body_size; }
 void webserv::Server::add_location(webserv::Location location) { _locations.push_back(location); }
 
-std::string webserv::Server::get_host()const { return _host; }
+std::string webserv::Server::get_host() const { return _host; }
 std::string webserv::Server::get_port() const { return _port; }
 std::vector<std::string> webserv::Server::get_server_name() const { return _server_name; }
 std::vector<std::string> webserv::Server::get_error_page() const { return _error_page; }
@@ -305,8 +303,10 @@ void webserv::print_servers(std::vector<webserv::Server> &servers)
 		std::cout << "____________________SERVER " << i << "____________________" << std::endl;
 		std::cout << "host:			" << it->get_host() << std::endl;
 		std::cout << "port:			" << it->get_port() << std::endl;
-		std::cout << "server name:		"; webserv::print_vector(it->get_server_name());
-		std::cout << "error_page:		"; webserv::print_vector(it->get_error_page());
+		std::cout << "server name:		";
+		webserv::print_vector(it->get_server_name());
+		std::cout << "error_page:		";
+		webserv::print_vector(it->get_error_page());
 		std::cout << "client_max_body_size:	" << it->get_client_max_body_size() << std::endl;
 
 		int j = 1;
@@ -316,9 +316,12 @@ void webserv::print_servers(std::vector<webserv::Server> &servers)
 			std::cout << "location: " << j << std::endl;
 			std::cout << "	uri:			" << it2->get_uri() << std::endl;
 			std::cout << "	root:			" << it2->get_root() << std::endl;
-			std::cout << "	index:			"; webserv::print_vector(it2->get_index());
-			std::cout << "	allow_methods:		"; webserv::print_vector(it2->get_allow_methods());
-			std::cout << "	return:		"; webserv::print_vector(it2->get_return());
+			std::cout << "	index:			";
+			webserv::print_vector(it2->get_index());
+			std::cout << "	allow_methods:		";
+			webserv::print_vector(it2->get_allow_methods());
+			std::cout << "	return:		";
+			webserv::print_vector(it2->get_return());
 			std::cout << "	autoindex:		" << it2->get_autoindex() << std::endl;
 			std::cout << "	cgi_pass:		" << it2->get_cgi_pass() << std::endl;
 
@@ -327,7 +330,9 @@ void webserv::print_servers(std::vector<webserv::Server> &servers)
 		}
 
 		std::cout << "____________________SERVER " << i << "____________________" << std::endl;
-		std::cout << std::endl << std::endl << std::endl;
+		std::cout << std::endl
+				  << std::endl
+				  << std::endl;
 		i++;
 		it++;
 	}

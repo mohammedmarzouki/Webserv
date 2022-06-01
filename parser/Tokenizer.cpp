@@ -17,15 +17,14 @@ void webserv::Tokenizer::fill_specs()
 	_specs.push_back("}");
 	_specs.push_back(";");
 
+	_specs.push_back("server");
 	_specs.push_back("host");
 	_specs.push_back("port");
 	_specs.push_back("server_name");
 	_specs.push_back("error_page");
 	_specs.push_back("client_max_body_size");
-	_specs.push_back("server");
 
 	_specs.push_back("location");
-	_specs.push_back("uri");
 	_specs.push_back("root");
 	_specs.push_back("index");
 	_specs.push_back("allow_methods");
@@ -34,6 +33,7 @@ void webserv::Tokenizer::fill_specs()
 	_specs.push_back("cgi_pass");
 
 	_specs.push_back("ipv4");
+	_specs.push_back("uri");
 	_specs.push_back("number");
 	_specs.push_back("string");
 }
@@ -43,7 +43,7 @@ bool webserv::Tokenizer::has_next() { return _pos < _input.length(); }
 webserv::Token webserv::Tokenizer::next_token()
 {
 	if (!has_next())
-		return webserv::Token("null", "null");
+		return webserv::Token("NULL", "NULL");
 
 	std::string string = _input.substr(_pos);
 
@@ -51,7 +51,7 @@ webserv::Token webserv::Tokenizer::next_token()
 	for (; it != _specs.end(); it++)
 	{
 		std::string tokenValue = match(*it, string);
-		if (tokenValue == "null")
+		if (tokenValue == "NULL")
 			continue;
 
 		// Should skip token e.g. whitespace or comment
@@ -68,8 +68,8 @@ std::string webserv::Tokenizer::match(std::string regexp, std::string string)
 	static webserv::Regex regex;
 
 	std::string matched = regex.match(regexp, string);
-	if (matched == "null")
-		return "null";
+	if (matched == "NULL")
+		return "NULL";
 	_pos += matched.length();
 	return matched;
 }

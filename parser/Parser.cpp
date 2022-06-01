@@ -20,7 +20,7 @@ webserv::Token webserv::Parser::eat(std::string token_type)
 {
 	webserv::Token token = _lookahead;
 
-	if (token.get_type() == "null")
+	if (token.get_type() == "NULL")
 		throw std::string("Unexpected end of file");
 	if (token.get_type() != token_type)
 		throw std::string("Unexpected token: " + token.get_value());

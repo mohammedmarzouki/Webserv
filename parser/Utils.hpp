@@ -23,8 +23,8 @@ namespace webserv
 
 		void set_type(std::string);
 		void set_value(std::string);
-		std::string get_type();
-		std::string get_value();
+		std::string get_type() const;
+		std::string get_value() const;
 	};
 
 	//////////////////////////////////////////////////
@@ -52,7 +52,6 @@ namespace webserv
 		std::string match_client_max_body_size(std::string &);
 
 		std::string match_location(std::string &);
-		std::string match_uri(std::string &);
 		std::string match_root(std::string &);
 		std::string match_index(std::string &);
 		std::string match_allow_methods(std::string &);
@@ -61,6 +60,7 @@ namespace webserv
 		std::string match_cgi_pass(std::string &);
 
 		std::string match_ipv4(std::string &);
+		std::string match_uri(std::string &);
 		std::string match_number(std::string &);
 		std::string match_string(std::string &);
 	};
