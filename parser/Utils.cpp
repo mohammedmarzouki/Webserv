@@ -243,7 +243,13 @@ std::string webserv::Regex::match_string(std::string &string)
 //////////////////////////////////////////////////
 // Location class
 //////////////////////////////////////////////////
-webserv::Location::Location() {}
+webserv::Location::Location()
+{
+	this->_uri = "NULL";
+	this->_root = "NULL";
+	this->_autoindex = "off";
+	this->_cgi_pass = "NULL";
+}
 webserv::Location::Location(const Location &src)
 {
 	*this = src;
@@ -281,7 +287,12 @@ std::string webserv::Location::get_cgi_pass() const { return _cgi_pass; }
 //////////////////////////////////////////////////
 // Server class
 //////////////////////////////////////////////////
-webserv::Server::Server() {}
+webserv::Server::Server()
+{
+	this->_host = "0.0.0.0";
+	this->_port = "8080";
+	this->_client_max_body_size = "NULL";
+}
 webserv::Server::Server(const Server &src)
 {
 	*this = src;

@@ -2,15 +2,18 @@
 
 void setup_config_file(int argc, char **argv, std::string &config_file)
 {
-	// ./webserv --help || -h
-	if (argc == 2 && (config_file == "--help" || config_file == "-h"))
-		PRINT("Usage: " << argv[0] << " [configuration file]");
-	// ./webserv [configuration file]
-	else if (argc == 2)
+	if (argc == 2)
 	{
 		config_file = argv[1];
-		read_config_file(config_file);
-		return;
+		// ./webserv --help || -h
+		if (config_file == "--help" || config_file == "-h")
+			PRINT("Usage: " << argv[0] << " [configuration file]");
+		// ./webserv [configuration file]
+		else
+		{
+			read_config_file(config_file);
+			return;
+		}
 	}
 	// ./webserv || ./webserv param1 param2 ...
 	else
