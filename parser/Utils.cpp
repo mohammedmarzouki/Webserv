@@ -290,13 +290,10 @@ std::string webserv::Location::get_cgi_pass() const { return _cgi_pass; }
 webserv::Server::Server()
 {
 	this->_host = "0.0.0.0";
-	this->_port = "8080";
+	this->_port = 8080;
 	this->_client_max_body_size = "NULL";
 }
-webserv::Server::Server(const Server &src)
-{
-	*this = src;
-}
+webserv::Server::Server(const Server &src) { *this = src; }
 webserv::Server::~Server() {}
 
 webserv::Server &webserv::Server::operator=(const Server &src)
@@ -311,14 +308,24 @@ webserv::Server &webserv::Server::operator=(const Server &src)
 }
 
 void webserv::Server::set_host(std::string host) { _host = host; }
-void webserv::Server::set_port(std::string port) { _port = port; }
+void webserv::Server::set_port(std::string port)
+{
+	std::string::iterator it = port.begin();
+	while (it != port.end())
+	{
+		if (!isdigit(*it))
+			throw std::string("Syntax error: port must be a number");
+		it++;
+	}
+	_port = atoi(port.c_str());
+}
 void webserv::Server::add_server_name(std::string server_name) { _server_name.push_back(server_name); }
 void webserv::Server::add_error_page(std::string error_page) { _error_page.push_back(error_page); }
 void webserv::Server::set_client_max_body_size(std::string client_max_body_size) { _client_max_body_size = client_max_body_size; }
 void webserv::Server::add_location(webserv::Location location) { _locations.push_back(location); }
 
 std::string webserv::Server::get_host() const { return _host; }
-std::string webserv::Server::get_port() const { return _port; }
+short webserv::Server::get_port() const { return _port; }
 std::vector<std::string> webserv::Server::get_server_name() const { return _server_name; }
 std::vector<std::string> webserv::Server::get_error_page() const { return _error_page; }
 std::string webserv::Server::get_client_max_body_size() const { return _client_max_body_size; }
