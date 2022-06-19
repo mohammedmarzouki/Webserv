@@ -112,7 +112,7 @@ namespace webserv
 	{
 	private:
 		std::string _host;
-		std::string _port;
+		short _port;
 		std::vector<std::string> _server_name;
 		std::vector<std::string> _error_page;
 		std::string _client_max_body_size;
@@ -132,7 +132,7 @@ namespace webserv
 		void set_client_max_body_size(std::string);
 		void add_location(Location);
 		std::string get_host() const;
-		std::string get_port() const;
+		short get_port() const;
 		std::vector<std::string> get_server_name() const;
 		std::vector<std::string> get_error_page() const;
 		std::string get_client_max_body_size() const;
