@@ -24,7 +24,7 @@
 // TOOLS
 void	setup_config_file(int, char **, std::string &);
 void	read_config_file(std::string &);
-void	exit_err(std::string &);
+void	exit_err(std::string);
 
 
 #endif // WEBSERV_HPP
