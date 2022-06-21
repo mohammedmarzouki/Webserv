@@ -4,9 +4,20 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
+// Request
+#define FAILED -1
+#define CHUNCKED 0
+#define DONE 1
+
+// Response
+#define KILL_CONNECTION 0
+#define KEEP_ALIVE 1
+
 #define PRINT_ERR(err) std::cerr << err << std::endl
 #define PRINT(msg) std::cout << msg << std::endl
 
+#include <map>
+#include <string>
 
 #include <arpa/inet.h>	// htons(3), htonl(3), ntohs(3), ntohl(3)
 #include <fcntl.h>		// fcntl(2)
@@ -19,6 +30,7 @@
 #include <sys/types.h>	// kqueue(2)
 
 #include "parser/Parser.hpp"
+#include "handle_request/Handle_request.hpp"
 
 
 // TOOLS

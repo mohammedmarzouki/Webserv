@@ -1,51 +1,52 @@
 #if !defined(HANDLE_REQUEST_HPP)
 #define HANDLE_REQUEST_HPP
 
-#include <map>
+#include "../webserv.hpp"
+
+#define RECV_SIZE 1024
 
 namespace webserv
 {
-    //////////////////////////////////////////////////
-    // Handle_request class
-    //////////////////////////////////////////////////
-    class Handle_request
-    {
-    private:
-        std::map<int, Request> requests;
+	//////////////////////////////////////////////////
+	// Request class
+	//////////////////////////////////////////////////
+	class Request
+	{
+	private:
+		std::string _method;
+		std::string _path;
+		std::string _connection;
+		int _body_fd;
 
-    public:
-        Handle_request();
-        // Handle_request(const Handle_request &);
-        // Handle_request &operator=(const Handle_request &);
+	public:
+		Request();
+	};
 
-        void ready_to_recv(int);
-        void treat_request(int);
-        void ready_to_send(int);
-    };
+	//////////////////////////////////////////////////
+	// Response class
+	//////////////////////////////////////////////////
+	class Response
+	{
+	private:
+	public:
+		Response();
+	};
 
-    //////////////////////////////////////////////////
-    // Request class
-    //////////////////////////////////////////////////
-    class Request
-    {
-    private:
-    public:
-        Request();
-        // Request(const Request &);
-        // Request &operator=(const Request &);
-    };
+	//////////////////////////////////////////////////
+	// Handle_request class
+	//////////////////////////////////////////////////
+	class Handle_request
+	{
+	private:
+		std::map<int, Request> requests;
 
-    //////////////////////////////////////////////////
-    // Response class
-    //////////////////////////////////////////////////
-    class Response
-    {
-    private:
-    public:
-        Response();
-        // Response(const Response &);
-        // Response &operator=(const Response &);
-    };
+	public:
+		Handle_request();
+
+		int recv_request(int, webserv::Server &);
+		void treat_request(int);
+		int send_response(int);
+	};
 
 } // namespace webserv
 
