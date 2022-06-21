@@ -28,15 +28,18 @@
 #include <sys/socket.h>	// socket(2), accept(2), listen(2), send(2), recv(2), bind(2), connect(2), inet_addr(3), setsockopt(2), getsockname(2)
 #include <sys/time.h>	// kqueue(2)
 #include <sys/types.h>	// kqueue(2)
+#include <unistd.h>     //close(2)
+#include <map>
 
 #include "parser/Parser.hpp"
+#include "handler/handler.hpp"
 #include "handle_request/Handle_request.hpp"
 
 
 // TOOLS
 void	setup_config_file(int, char **, std::string &);
 void	read_config_file(std::string &);
-void	exit_err(std::string &);
+void	exit_err(std::string);
 
 
 #endif // WEBSERV_HPP

@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 	// Processing
 	//////////////////////////////////////////////////
 	{
+		sock::looper(servers);
 	}
 	return EXIT_SUCCESS;
 }
