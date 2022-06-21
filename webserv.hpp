@@ -4,6 +4,12 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
+#define FAILURE -1
+#define CHUNCKED 0
+#define ENDED 1
+
+
+
 #define PRINT_ERR(err) std::cerr << err << std::endl
 #define PRINT(msg) std::cout << msg << std::endl
 
@@ -17,8 +23,11 @@
 #include <sys/socket.h>	// socket(2), accept(2), listen(2), send(2), recv(2), bind(2), connect(2), inet_addr(3), setsockopt(2), getsockname(2)
 #include <sys/time.h>	// kqueue(2)
 #include <sys/types.h>	// kqueue(2)
+#include <unistd.h>     //close(2)
+#include <map>
 
 #include "parser/Parser.hpp"
+#include "handler/handler.hpp"
 
 
 // TOOLS

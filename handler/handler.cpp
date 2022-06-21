@@ -1,55 +1,126 @@
 #include "handler.hpp"
 
+
 sock::SocketMaker::~SocketMaker() {
-    // close(new_socket);
+    close(_socket);
 }
-sock::SocketMaker::SocketMaker(webserv::Server serv) : server(serv) , location(serv.get_locations()) {
+sock::SocketMaker::SocketMaker(webserv::Server &serv) : server(serv) , location(serv.get_locations()) {
 	struct sockaddr_in address;
 
 	memset(&address, 0, sizeof(address));
 	address.sin_family = AF_INET;
-	// address.sin_port = htons(serv.get_port());
-	address.sin_port = htons(8080);
+	address.sin_port = htons(serv.get_port());
 	address.sin_addr.s_addr = inet_addr((serv.get_host()).c_str());
 
-	if ((_socket = socket(PF_INET, SOCK_STREAM, 0)) < 0 )
-		exit_err("failed socket");
+	if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+		throw "failed socket";
+	if(fcntl(_socket, F_SETFL, O_NONBLOCK))
+		throw "failed fcntl";
+	
+	int bool_opt(1);
+	if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &bool_opt, sizeof(bool_opt)))
+		throw "failed socketoptions";
 
-	if (fcntl(_socket, F_SETFL, O_NONBLOCK) < 0)
-		exit_err("failed nonblock socket");
+    if (bind(_socket, (sockaddr *) &address,  sizeof(address)))
+		throw "failed bind socket";
 
-    if (bind(_socket, (sockaddr *) &address,  sizeof(address)) < 0)
-		exit_err("failed bind socket");
+	if(listen(_socket, 1024))
+		throw "failed listening to socket";
 
-//     #include <sys/socket.h> 
-// … 
-// struct sockaddr_in address;
-// const int PORT = 8080; //Where the clients can reach at
-// /* htonl converts a long integer (e.g. address) to a network representation */ 
-// /* htons converts a short integer (e.g. port) to a network representation */ 
-// memset((char *)&address, 0, sizeof(address)); 
-// address.sin_family = AF_INET; 
-// address.sin_addr.s_addr = htonl(INADDR_ANY); 
-// address.sin_port = htons(PORT); 
-// if (bind(server_fd,(struct sockaddr *)&address,sizeof(address)) < 0) 
-// { 
-//     perror(“bind failed”); 
-//     return 0; 
-// }
+}
 
+int sock::set_servers(fd_set &rd,fd_set &wr){
+	int max_fd(0);
 
+	FD_ZERO(&rd);
+	FD_ZERO(&wr);
+	for (size_t i = 0; i < srv.size(); i++){
+		FD_SET(srv[i]._socket,&rd);
+		max_fd = max_fd < srv[i]._socket ? srv[i]._socket : max_fd;
+	}
+	return (max_fd);
+}
 
-//then
+bool sock::isserver(const int &fd){
+	for(int i(0); i < srv.size(); i++){
+		if(srv[i]._socket == fd)
+			return(true);
+	}
+	return(false);
+}
 
+webserv::Server &sock::search_server(const int &fd){
+	for(int i(0); i < srv.size(); i++){
+		if(srv[i]._socket == fd)
+			return(srv[i].server);
+	}
+	return(srv[0].server);
+}
 
-// if (listen(server_fd, 3) < 0) 
-// { 
-//     perror(“In listen”); 
-//     exit(EXIT_FAILURE); 
-// }
-// if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0)
-// {
-//     perror("In accept");            
-//     exit(EXIT_FAILURE);        
-// }
+void sock::ReadyToRead(int &fd, fd_set &rd,fd_set &wr, int &max_fd){
+	if (isserver(fd)){
+		int client;
+		if((client = accept(fd, NULL, NULL)) < 0)
+			return ;
+		fcntl(client, F_SETFL, O_NONBLOCK);
+		cli_srv[client] = fd;
+		FD_SET(client, &rd);
+		max_fd = max_fd < client ? client : max_fd;
+
+	} else {
+		// switch (Handle_request.failed_to_recv(fd, search_server(cli_srv[fd]))) {
+		// 	case FAILURE:
+		// 		FD_CLR(fd, &rd);
+		// 		cli_srv.erase(fd);
+		// 		close(fd);
+		// 		fd == max_fd ? max_fd-- : 0;
+		// 		break;
+		// 	case ENDED:
+		// 		FD_CLR(fd, &rd);
+		// 		FD_SET(fd, &wr);
+		// 		break;
+		// }
+	}
+}
+void sock::ReadyToWrite(int &fd, fd_set &rd,fd_set &wr, int &max_fd){
+
+	// switch (Handle_request.send_request(fd)) {
+	// 	case CLOSE_CONNECTION:
+	// 		FD_CLR(fd, &wr);
+	// 		cli_srv.erase(fd);
+	// 		close(fd);
+	// 		fd == max_fd ? max_fd-- : 0;
+	// 		break;
+	// 	case KEEP_CONNECTION:
+	// 		FD_CLR(fd, &wr);
+	// 		FD_SET(fd, &rd);
+	// 		break;
+	// }
+
+}
+
+void sock::looper(std::vector<webserv::Server> servers){
+	for(int i(0); i < servers.size(); i++){
+		try {
+			srv.push_back(sock::SocketMaker(servers[i]));
+		}catch(const std::string &e) {
+			PRINT_ERR(e);
+			srv.clear();
+			return;
+		}
+	}
+	fd_set rd , wr;
+	int max_fd = set_servers(rd, wr);
+	
+	while (1) {
+		if(select(max_fd + 1, &rd, &wr, NULL,  NULL) < 1)
+			continue;
+		for (int i(0); i < max_fd; i++){
+			if(FD_ISSET(i, &rd))
+				ReadyToRead(i, rd, wr, max_fd);
+			else if (FD_ISSET(i, &wr))
+				ReadyToWrite(i, rd, wr, max_fd);
+		}
+	}
+	
 }
