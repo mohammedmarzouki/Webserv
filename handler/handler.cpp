@@ -68,34 +68,34 @@ void sock::ReadyToRead(int &fd, fd_set &rd,fd_set &wr, int &max_fd){
 		max_fd = max_fd < client ? client : max_fd;
 
 	} else {
-		// switch (Handle_request.failed_to_recv(fd, search_server(cli_srv[fd]))) {
-		// 	case FAILURE:
-		// 		FD_CLR(fd, &rd);
-		// 		cli_srv.erase(fd);
-		// 		close(fd);
-		// 		fd == max_fd ? max_fd-- : 0;
-		// 		break;
-		// 	case ENDED:
-		// 		FD_CLR(fd, &rd);
-		// 		FD_SET(fd, &wr);
-		// 		break;
-		// }
+		switch (handler.recv_request(fd, search_server(cli_srv[fd]))) {
+			case FAILED:
+				FD_CLR(fd, &rd);
+				cli_srv.erase(fd);
+				close(fd);
+				fd == max_fd ? max_fd-- : 0;
+				break;
+			case DONE:
+				FD_CLR(fd, &rd);
+				FD_SET(fd, &wr);
+				break;
+		}
 	}
 }
 void sock::ReadyToWrite(int &fd, fd_set &rd,fd_set &wr, int &max_fd){
 
-	// switch (Handle_request.send_request(fd)) {
-	// 	case CLOSE_CONNECTION:
-	// 		FD_CLR(fd, &wr);
-	// 		cli_srv.erase(fd);
-	// 		close(fd);
-	// 		fd == max_fd ? max_fd-- : 0;
-	// 		break;
-	// 	case KEEP_CONNECTION:
-	// 		FD_CLR(fd, &wr);
-	// 		FD_SET(fd, &rd);
-	// 		break;
-	// }
+	switch (handler.send_response(fd)) {
+		case KILL_CONNECTION:
+			FD_CLR(fd, &wr);
+			cli_srv.erase(fd);
+			close(fd);
+			fd == max_fd ? max_fd-- : 0;
+			break;
+		case KEEP_ALIVE:
+			FD_CLR(fd, &wr);
+			FD_SET(fd, &rd);
+			break;
+	}
 
 }
 

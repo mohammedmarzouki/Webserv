@@ -14,6 +14,7 @@ namespace sock {
             ~SocketMaker();
         };
     std::vector<sock::SocketMaker> srv;
+    webserv::Handle_request handler;
     std::map<int,int> cli_srv;
 
     void looper(std::vector<webserv::Server> servers);

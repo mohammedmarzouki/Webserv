@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 	{
 		exit_err(err);
 	}
-	webserv::print_servers(servers);
+	// webserv::print_servers(servers);
 
 	//////////////////////////////////////////////////
 	// Processing

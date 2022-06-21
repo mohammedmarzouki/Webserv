@@ -11,11 +11,13 @@ NAME = webserv
 INCLUDES = webserv.hpp \
 			parser/Parser.hpp \
 			parser/Tokenizer.hpp \
+			handle_request/Handle_request.hpp \
 			parser/Utils.hpp
 
 SRCS = main.cpp \
 		parser/Parser.cpp \
 		parser/Tokenizer.cpp \
+		handle_request/Handle_request.cpp \
 		parser/Utils.cpp \
 		tools/tools.cpp
 
