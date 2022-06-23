@@ -45,3 +45,14 @@ void exit_err(std::string &err)
 	PRINT_ERR(err);
 	exit(EXIT_FAILURE);
 }
+
+std::vector<std::string> split_string(std::string str, std::string delimiter)
+{
+	std::stringstream stream(str);
+	std::string word;
+	std::vector<std::string> final_vector;
+
+	while (stream >> word)
+		final_vector.push_back(word);
+	return final_vector;
+}

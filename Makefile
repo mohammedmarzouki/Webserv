@@ -11,14 +11,14 @@ NAME = webserv
 INCLUDES = webserv.hpp \
 			parser/Parser.hpp \
 			parser/Tokenizer.hpp \
-			handle_request/Handle_request.hpp \
-			parser/Utils.hpp
+			parser/Utils.hpp \
+			handle_request/Handle_request.hpp
 
 SRCS = main.cpp \
 		parser/Parser.cpp \
 		parser/Tokenizer.cpp \
-		handle_request/Handle_request.cpp \
 		parser/Utils.cpp \
+		handle_request/Handle_request.cpp \
 		tools/tools.cpp
 
 all: $(NAME)
@@ -33,6 +33,7 @@ clean:
 
 fclean: clean
 	@rm -f $(NAME)
+	@rm -rf .vscode
 	@echo "$(GREEN)Full clean successful$(NC)"
 
 re: fclean all
