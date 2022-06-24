@@ -73,7 +73,12 @@ void Parser::server_directives(Server &server)
 	else if (_lookahead.get_type() == "error_page")
 	{
 		eat("error_page");
-		while (_lookahead.get_value() != ";" && (_lookahead.get_type() == "number" || _lookahead.get_type() == "uri"))
+		if (_lookahead.get_type() == "number")
+		{
+			server.add_error_page(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		if (_lookahead.get_type() == "uri")
 		{
 			server.add_error_page(_lookahead.get_value());
 			eat(_lookahead.get_type());
