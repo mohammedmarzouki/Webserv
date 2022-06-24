@@ -4,7 +4,7 @@
 // Request class
 //////////////////////////////////////////////////
 webserv::Request::Request()
-	: _method("NULL"), _path("NULL"), _connection("NULL"), _content_length("NULL"), _transfer_encoding("NULL"), _body_fd(-1) {}
+	: _method("NULL"), _path("NULL"), _connection("NULL"), _content_length("NULL"), _transfer_encoding("NULL"), _body_fd(-1) {(void)_body_fd;}
 
 void webserv::Request::set_method(std::string method) { this->_method = method; }
 void webserv::Request::set_path(std::string path) { this->_path = path; }

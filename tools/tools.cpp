@@ -48,6 +48,7 @@ void exit_err(std::string &err)
 
 std::vector<std::string> split_string(std::string str, std::string delimiter)
 {
+	(void)delimiter;
 	std::stringstream stream(str);
 	std::string word;
 	std::vector<std::string> final_vector;

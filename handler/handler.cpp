@@ -42,7 +42,7 @@ int sock::set_servers(fd_set &rd,fd_set &wr){
 }
 
 bool sock::isserver(const int &fd){
-	for(int i(0); i < srv.size(); i++){
+	for(size_t i(0); i < srv.size(); i++){
 		if(srv[i]._socket == fd)
 			return(true);
 	}
@@ -50,7 +50,7 @@ bool sock::isserver(const int &fd){
 }
 
 webserv::Server &sock::search_server(const int &fd){
-	for(int i(0); i < srv.size(); i++){
+	for(size_t i(0); i < srv.size(); i++){
 		if(srv[i]._socket == fd)
 			return(srv[i].server);
 	}
@@ -100,7 +100,7 @@ void sock::ReadyToWrite(int &fd, fd_set &rd,fd_set &wr, int &max_fd){
 }
 
 void sock::looper(std::vector<webserv::Server> servers){
-	for(int i(0); i < servers.size(); i++){
+	for(size_t i(0); i < servers.size(); i++){
 		try {
 			srv.push_back(sock::SocketMaker(servers[i]));
 		}catch(const std::string &e) {

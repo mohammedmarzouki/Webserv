@@ -12,12 +12,14 @@ INCLUDES = webserv.hpp \
 			parser/Parser.hpp \
 			parser/Tokenizer.hpp \
 			parser/Utils.hpp \
+			handler/handler.hpp \
 			handle_request/Handle_request.hpp
 
 SRCS = main.cpp \
 		parser/Parser.cpp \
 		parser/Tokenizer.cpp \
 		parser/Utils.cpp \
+		handler/handler.cpp \
 		handle_request/Handle_request.cpp \
 		tools/tools.cpp
 
