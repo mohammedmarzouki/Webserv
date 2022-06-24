@@ -41,8 +41,8 @@ int Handle_request::recv_request(int fd, Server &server)
 {
 	(void)fd;
 	(void)server;
-	char temp[RECV_SIZE] = "POST /photos HTTP/1.1\r\n\
-				 			Host: localhost:8080\r\n\
+	char temp[RECV_SIZE] = "GET /photos HTTP/1.1\r\n\
+							Host: localhost:8080\r\n\
 							Connection: keep-alive\r\n\
 							Content-Type: application/x-www-form-urlencoded\r\n\
 							Content-Length: 13\r\n\
@@ -60,11 +60,18 @@ int Handle_request::recv_request(int fd, Server &server)
 	}
 	else
 	{
-		request_first_line(received, requests[fd]);
-		requests[fd].set_connection(find_value("Connection:", received));
-		requests[fd].set_content_length(find_value("Content-Length:", received));
-		requests[fd].set_transfer_encoding(find_value("Transfer-Encoding:", received));
-		std::cout << requests[fd] << std::endl;
+		try
+		{
+			request_first_line(received, requests[fd]);
+			// requests[fd].set_connection(find_value("Connection:", received));
+			// requests[fd].set_content_length(find_value("Content-Length:", received));
+			// requests[fd].set_transfer_encoding(find_value("Transfer-Encoding:", received));
+			// std::cout << requests[fd] << std::endl;
+		}
+		catch (std::out_of_range &e)
+		{
+			std::cout << "Not found" << std::endl;
+		}
 
 		// check for errors; location doesn't accept such method
 
@@ -104,7 +111,8 @@ int Handle_request::request_first_line(std::string received, Request &request)
 std::string Handle_request::find_value(std::string key, std::string received)
 {
 	size_t pos = received.find(key);
-	std::string whole_line = received.substr(pos, received.find("\r\n", pos));
+	size_t end_pos = received.find("\r\n", pos);
+	std::string whole_line = received.substr(pos, end_pos - pos);
 	std::vector<std::string> splitted_line = split_string(whole_line, " ");
 	return splitted_line[1];
 }
@@ -118,12 +126,16 @@ void Handle_request::delete_handle() {}
 //////////////////////////////////////////////////
 std::vector<std::string> split_string(std::string str, std::string delimiter)
 {
-	(void)delimiter;
-	std::stringstream stream(str);
-	std::string word;
+	size_t pos = 0;
+	std::string token;
 	std::vector<std::string> final_vector;
 
-	while (stream >> word)
-		final_vector.push_back(word);
+	while ((pos = str.find(delimiter)) != std::string::npos)
+	{
+		token = str.substr(0, pos);
+		final_vector.push_back(token);
+		str.erase(0, pos + delimiter.length());
+	}
+	final_vector.push_back(str);
 	return final_vector;
 }
