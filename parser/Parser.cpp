@@ -3,20 +3,20 @@
 //////////////////////////////////////////////////
 // Parser class
 //////////////////////////////////////////////////
-webserv::Parser::Parser() {}
-webserv::Parser::Parser(std::string config_file)
+Parser::Parser() {}
+Parser::Parser(std::string config_file)
 {
 	_config_file = config_file;
-	_tokenizer = webserv::Tokenizer(_config_file);
+	_tokenizer = Tokenizer(_config_file);
 	_lookahead = _tokenizer.next_token();
 	while (_lookahead.get_type() == "server")
 		_servers.push_back(server());
 }
-webserv::Parser::~Parser() {}
+Parser::~Parser() {}
 
-webserv::Token webserv::Parser::eat(std::string token_type)
+Token Parser::eat(std::string token_type)
 {
-	webserv::Token token = _lookahead;
+	Token token = _lookahead;
 
 	if (token.get_type() == "NULL")
 		throw std::string("Unexpected end of file");
@@ -27,9 +27,9 @@ webserv::Token webserv::Parser::eat(std::string token_type)
 	return token;
 }
 
-webserv::Server webserv::Parser::server()
+Server Parser::server()
 {
-	webserv::Server server;
+	Server server;
 
 	eat("server");
 	eat("{");
@@ -38,7 +38,7 @@ webserv::Server webserv::Parser::server()
 	eat("}");
 	return server;
 }
-void webserv::Parser::server_directives(webserv::Server &server)
+void Parser::server_directives(Server &server)
 {
 	if (_lookahead.get_type() == "host")
 	{
@@ -102,9 +102,9 @@ void webserv::Parser::server_directives(webserv::Server &server)
 		throw std::string("Unexpected token: " + _lookahead.get_value());
 }
 
-webserv::Location webserv::Parser::location()
+Location Parser::location()
 {
-	webserv::Location location;
+	Location location;
 
 	eat("location");
 	if (_lookahead.get_type() == "uri")
@@ -118,7 +118,7 @@ webserv::Location webserv::Parser::location()
 	eat("}");
 	return location;
 }
-void webserv::Parser::location_directives(webserv::Location &location)
+void Parser::location_directives(Location &location)
 {
 	if (_lookahead.get_type() == "root")
 	{
@@ -184,7 +184,7 @@ void webserv::Parser::location_directives(webserv::Location &location)
 		throw std::string("Unexpected token: " + _lookahead.get_value());
 }
 
-std::vector<webserv::Server> webserv::Parser::get_servers() const
+std::vector<Server> Parser::get_servers() const
 {
 	return _servers;
 }

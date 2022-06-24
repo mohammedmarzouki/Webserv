@@ -3,12 +3,12 @@
 //////////////////////////////////////////////////
 // Tokenizer class
 //////////////////////////////////////////////////
-webserv::Tokenizer::Tokenizer() {}
-webserv::Tokenizer::Tokenizer(std::string input)
+Tokenizer::Tokenizer() {}
+Tokenizer::Tokenizer(std::string input)
 	: _input(input), _pos(0) { fill_specs(); }
-webserv::Tokenizer::~Tokenizer() {}
+Tokenizer::~Tokenizer() {}
 
-void webserv::Tokenizer::fill_specs()
+void Tokenizer::fill_specs()
 {
 	_specs.push_back("whitespace");
 	_specs.push_back("comment");
@@ -38,12 +38,12 @@ void webserv::Tokenizer::fill_specs()
 	_specs.push_back("string");
 }
 
-bool webserv::Tokenizer::is_EOF() { return _pos >= _input.length(); }
-bool webserv::Tokenizer::has_next() { return _pos < _input.length(); }
-webserv::Token webserv::Tokenizer::next_token()
+bool Tokenizer::is_EOF() { return _pos >= _input.length(); }
+bool Tokenizer::has_next() { return _pos < _input.length(); }
+Token Tokenizer::next_token()
 {
 	if (!has_next())
-		return webserv::Token("NULL", "NULL");
+		return Token("NULL", "NULL");
 
 	std::string string = _input.substr(_pos);
 
@@ -56,15 +56,15 @@ webserv::Token webserv::Tokenizer::next_token()
 
 		// Should skip token e.g. whitespace or comment
 		if (*it == "whitespace" || *it == "comment")
-			return webserv::Tokenizer::next_token();
+			return Tokenizer::next_token();
 
-		return webserv::Token(*it, tokenValue);
+		return Token(*it, tokenValue);
 	}
 	throw std::string("Invalid token");
 }
-std::string webserv::Tokenizer::match(std::string regexp, std::string string)
+std::string Tokenizer::match(std::string regexp, std::string string)
 {
-	static webserv::Regex regex;
+	static Regex regex;
 
 	std::string matched = regex.match(regexp, string);
 	if (matched == "NULL")

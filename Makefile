@@ -20,8 +20,7 @@ SRCS = main.cpp \
 		parser/Tokenizer.cpp \
 		parser/Utils.cpp \
 		handler/handler.cpp \
-		handle_request/Handle_request.cpp \
-		tools/tools.cpp
+		handle_request/Handle_request.cpp
 
 all: $(NAME)
 
