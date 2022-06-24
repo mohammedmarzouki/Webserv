@@ -22,7 +22,7 @@ namespace sock {
     void ReadyToRead(int &fd, fd_set &rd,fd_set &wr, int &max_fd);
     void ReadyToWrite(int &fd, fd_set &rd,fd_set &wr, int &max_fd);
     bool isserver(const int &fd);
-    webserv::Server &sock::search_server(const int &fd);
+    webserv::Server &search_server(const int &fd);
 }
 
 #endif
