@@ -4,7 +4,7 @@ GREEN = \033[1;32m
 ORANGE = \033[1;33m
 
 COMPILER = clang++
-FLAGS = -Wall -Wextra -Werror -std=c++98 -g
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
 
 NAME = webserv
 

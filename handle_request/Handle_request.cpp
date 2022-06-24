@@ -30,7 +30,24 @@ std::ostream &operator<<(std::ostream &output, Request const &i)
 //////////////////////////////////////////////////
 // Response class
 //////////////////////////////////////////////////
-Response::Response() {}
+Response::Response() : _status_line("HTTP/1.1"), _connection("NULL"), _content_length("NULL"), _content_type("NULL") {}
+
+void Response::set_status_line(std::string status_line) { this->_status_line = status_line; }
+void Response::set_connection(std::string connection) { this->_connection = connection; }
+void Response::set_content_length(std::string content_length) { this->_content_length = content_length; }
+void Response::set_content_type(std::string content_type) { this->_content_type = content_type; }
+std::string Response::get_status_line(void) const { return _status_line; }
+std::string Response::get_connection(void) const { return _connection; }
+std::string Response::get_content_length(void) const { return _content_length; }
+std::string Response::get_content_type(void) const { return _content_type; }
+
+void Response::clear_response()
+{
+	_status_line = "HTTP/1.1";
+	_connection = "NULL";
+	_content_length = "NULL";
+	_content_type = "NULL";
+}
 
 //////////////////////////////////////////////////
 // Handle_request class
@@ -49,7 +66,10 @@ int Handle_request::recv_request(int fd, Server &server)
 							Transfer-Encoding: chunked\r\n\r\n";
 
 	if (requests.find(fd) == requests.end())
-		requests[fd] = Request();
+	{
+		requests[fd].first = Request();
+		requests[fd].second = Response();
+	}
 	// int r = recv(fd, temp, RECV_SIZE, 0);
 	int r = 1;
 	std::string received(temp);
@@ -62,11 +82,11 @@ int Handle_request::recv_request(int fd, Server &server)
 	{
 		try
 		{
-			request_first_line(received, requests[fd]);
-			// requests[fd].set_connection(find_value("Connection:", received));
-			// requests[fd].set_content_length(find_value("Content-Length:", received));
-			// requests[fd].set_transfer_encoding(find_value("Transfer-Encoding:", received));
-			// std::cout << requests[fd] << std::endl;
+			request_first_line(received, requests[fd].first);
+			requests[fd].first.set_connection(find_value("Connection:", received));
+			requests[fd].first.set_content_length(find_value("Content-Length:", received));
+			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
+			std::cout << requests[fd].first << std::endl;
 		}
 		catch (std::out_of_range &e)
 		{
@@ -75,26 +95,28 @@ int Handle_request::recv_request(int fd, Server &server)
 
 		// check for errors; location doesn't accept such method
 
-		// redirection
-		if (requests[fd].get_method() == "GET")
-			Handle_request::get_handle();
-		else if (requests[fd].get_method() == "POST")
-			Handle_request::post_handle();
-		else if (requests[fd].get_method() == "DELETE")
-			Handle_request::delete_handle();
-		else
-		{
-		}
-		return DONE;
+		return treat_request(fd);
 	}
 }
-void Handle_request::treat_request(int fd)
+int Handle_request::treat_request(int fd)
 {
-	(void)fd;
+	if (requests[fd].first.get_method() == "GET")
+		Handle_request::get_handle();
+	else if (requests[fd].first.get_method() == "POST")
+		Handle_request::post_handle();
+	else if (requests[fd].first.get_method() == "DELETE")
+		Handle_request::delete_handle();
+	else
+	{
+	}
+	return DONE;
 }
 int Handle_request::send_response(int fd)
 {
-	(void)fd;
+	char buffer[RECV_SIZE];
+	std::string header;
+
+	send(fd, buffer, strlen(buffer), 0);
 	return DONE;
 }
 
