@@ -29,7 +29,8 @@ private:
 	std::string _connection;
 	std::string _content_length;
 	std::string _transfer_encoding;
-	int _body_fd;
+	std::string _temp_body;
+	bool _header_read;
 
 public:
 	Request();
@@ -39,11 +40,15 @@ public:
 	void set_connection(std::string);
 	void set_content_length(std::string);
 	void set_transfer_encoding(std::string);
+	void set_temp_body(std::string);
+	void set_header_read(bool);
 	std::string get_method(void) const;
 	std::string get_path(void) const;
 	std::string get_connection(void) const;
 	std::string get_content_length(void) const;
 	std::string get_transfer_encoding(void) const;
+	std::string get_temp_body(void) const;
+	bool get_header_read(void) const;
 };
 std::ostream &operator<<(std::ostream &, Request const &);
 
@@ -90,6 +95,7 @@ public:
 
 	int request_first_line(std::string, Request &);
 	std::string find_value(std::string, std::string);
+	Location wanted_location(std::string, Server &);
 
 	void get_handle();
 	void post_handle();

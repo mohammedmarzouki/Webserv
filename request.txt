@@ -1,52 +1,67 @@
-form Postman:
+//  FROM Postman
 
-POST /photos HTTP/1.1
+/// GET Request
+GET / HTTP/1.1
 User-Agent: PostmanRuntime/7.29.0
 Accept: */*
-Postman-Token: a7fd2bea-c4bb-4b09-b35a-440514abe19a
+Postman-Token: c2129fb4-2300-4a52-8b69-56401c077dd2
+Host: localhost:8080
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+
+GET / HTTP/1.1
+User-Agent: PostmanRuntime/7.29.0
+Accept: */*
+Postman-Token: 664b17df-c49a-4be9-adc1-ce8cf95ef3ac
 Host: localhost:8080
 Accept-Encoding: gzip, deflate, br
 Connection: keep-alive
 Content-Type: application/x-www-form-urlencoded
 Content-Length: 13
 
-kkkk=vvvvalue
+keykey=valval
 
 
-
-from curl command:
-
-GET / HTTP/1.1
-Host: localhost:8080
-User-Agent: curl/7.54.0
+/// POST Request
+POST / HTTP/1.1
+User-Agent: PostmanRuntime/7.29.0
 Accept: */*
-
-
-from Chrome:
-
-GET / HTTP/1.1
+Postman-Token: b02a49fa-ce65-4ea9-9a75-37dabf59a895
 Host: localhost:8080
-Connection: keep-alive
-Upgrade-Insecure-Requests: 1
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.61 Safari/537.36
-Accept-Language: en-US
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Sec-GPC: 1
-Sec-Fetch-Site: none
-Sec-Fetch-Mode: navigate
-Sec-Fetch-User: ?1
-Sec-Fetch-Dest: document
 Accept-Encoding: gzip, deflate, br
-
-
-
-from Safari:
-
-GET / HTTP/1.1
-Host: localhost:8080
-Upgrade-Insecure-Requests: 1
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Safari/605.1.15
-Accept-Language: en-us
-Accept-Encoding: gzip, deflate
 Connection: keep-alive
+Content-Length: 0
+
+POST / HTTP/1.1
+User-Agent: PostmanRuntime/7.29.0
+Accept: */*
+Postman-Token: e2529db0-9dc8-4034-99ef-bc33c50b262c
+Host: localhost:8080
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 13
+
+keykey=valval
+
+
+/// DELETE Request
+DELETE / HTTP/1.1
+User-Agent: PostmanRuntime/7.29.0
+Accept: */*
+Postman-Token: 221a5a95-e614-4bdd-bcfb-a72640971091
+Host: localhost:8080
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+
+DELETE /photo HTTP/1.1
+User-Agent: PostmanRuntime/7.29.0
+Accept: */*
+Postman-Token: 120db4c2-b28f-45ff-945a-79eb13975639
+Host: localhost:8080
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 13
+
+keykey=valval
