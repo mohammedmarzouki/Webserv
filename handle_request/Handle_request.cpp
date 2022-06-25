@@ -164,10 +164,26 @@ int Handle_request::treat_request(int fd)
 int Handle_request::send_response(int fd)
 {
 	char buffer[RECV_SIZE];
-	std::string header;
 
+	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
 	send(fd, buffer, strlen(buffer), 0);
-	return DONE;
+
+	sprintf(buffer, "Connection: close\r\n");
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "Content-Length: %u\r\n", 10);
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "Content-Type: %s\r\n", "text/plain");
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "\r\n");
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "tatatatata");
+	send(fd, buffer, strlen(buffer), 0);
+
+	return KILL_CONNECTION;
 }
 
 int Handle_request::request_first_line(std::string received, Request &request)
