@@ -35,6 +35,7 @@ std::ostream &operator<<(std::ostream &output, Request const &i)
 	output << "i.get_connection():		" << i.get_connection() << std::endl;
 	output << "i.get_content_length():		" << i.get_content_length() << std::endl;
 	output << "i.get_transfer_encoding():	" << i.get_transfer_encoding() << std::endl;
+	output << "i.get_temp_body():		" << i.get_temp_body() << std::endl;
 	return output;
 }
 
@@ -67,18 +68,7 @@ Handle_request::Handle_request() {}
 
 int Handle_request::recv_request(int fd, Server &server)
 {
-	(void)fd;
-	(void)server;
-
-	char temp[RECV_SIZE] = "POST /kapouet/folder/file HTTP/1.1\r\n\
-							User-Agent: PostmanRuntime/7.29.0\r\n\
-							Accept: */*\r\n\
-							Postman-Token: e2529db0-9dc8-4034-99ef-bc33c50b262c\r\n\
-							Host: localhost:8080\r\n\
-							Accept-Encoding: gzip, deflate, br\r\n\
-							Connection: keep-alive\r\n\
-							Content-Type: application/x-www-form-urlencoded\r\n\
-							Content-Length: 13\r\n\r\nkeykey=valval";
+	char temp[RECV_SIZE];
 
 	/// if server doesn't exist, add it to the map
 	if (requests.find(fd) == requests.end())
@@ -87,8 +77,7 @@ int Handle_request::recv_request(int fd, Server &server)
 		requests[fd].second = Response();
 	}
 
-	// int r = recv(fd, temp, RECV_SIZE, 0);
-	int r = 1;
+	int r = recv(fd, temp, RECV_SIZE, 0);
 	std::string received(temp);
 
 	if (r < 1)
@@ -137,13 +126,18 @@ int Handle_request::recv_request(int fd, Server &server)
 							break;
 					} while (current_path.size());
 
+					// if location isn't found, use root location
+					if (location.get_uri() == "NULL")
+						location = wanted_location("/", server);
+
 					// Check if location accept POST method before reading the body
 					std::vector<std::string> allow_methods = location.get_allow_methods();
 					if (!std::count(allow_methods.begin(), allow_methods.end(), "POST"))
 						return FAILED;
 
 					// Change Request path to the right path based on location root
-					requests[fd].first.set_path(location.get_root() + requests[fd].first.get_path().substr(location.get_uri().size()));
+					size_t from_path = location.get_uri().size() == 1 ? 0 : location.get_uri().size();
+					requests[fd].first.set_path(location.get_root() + requests[fd].first.get_path().substr(from_path));
 				}
 			}
 		}

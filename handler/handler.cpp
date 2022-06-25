@@ -4,10 +4,7 @@ std::vector<SocketMaker> srv;
 Handle_request handler;
 std::map<int, int> cli_srv;
 
-SocketMaker::~SocketMaker()
-{
-	close(_socket);
-}
+SocketMaker::~SocketMaker() {}
 SocketMaker::SocketMaker(Server &serv) : server(serv), location(serv.get_locations())
 {
 	struct sockaddr_in address;
@@ -125,6 +122,8 @@ void looper(std::vector<Server> servers)
 		catch (const std::string &e)
 		{
 			PRINT_ERR(e);
+			for (size_t j(0); j < servers.size(); j++)
+				close(srv[j]._socket);
 			srv.clear();
 			return;
 		}
@@ -136,7 +135,7 @@ void looper(std::vector<Server> servers)
 	{
 		if (select(max_fd + 1, &rd, &wr, NULL, NULL) < 1)
 			continue;
-		for (int i(0); i < max_fd; i++)
+		for (int i(0); i <= max_fd; i++)
 		{
 			if (FD_ISSET(i, &rd))
 				ReadyToRead(i, rd, wr, max_fd);
