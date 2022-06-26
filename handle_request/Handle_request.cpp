@@ -20,9 +20,10 @@ void Request::set_content_length(std::string content_length) { this->_content_le
 void Request::set_transfer_encoding(std::string transfer_encoding) { this->_transfer_encoding = transfer_encoding; }
 void Request::set_temp_header(std::string temp_header) { this->_temp_header = temp_header; }
 void Request::set_temp_body(std::string temp_body) { this->_temp_body = temp_body; }
+void Request::set_location(Location location) { this->_location = location; }
+void Request::set_status_code(short status_code) { this->_status_code = status_code; }
 void Request::set_header_status(short header_status) { this->_header_status = header_status; }
 void Request::set_body_status(short body_status) { this->_body_status = body_status; }
-void Request::set_location(Location location) { this->_location = location; }
 std::string Request::get_method(void) const { return _method; }
 std::string Request::get_path(void) const { return _path; }
 std::string Request::get_connection(void) const { return _connection; }
@@ -30,19 +31,10 @@ std::string Request::get_content_length(void) const { return _content_length; }
 std::string Request::get_transfer_encoding(void) const { return _transfer_encoding; }
 std::string Request::get_temp_header(void) const { return _temp_header; }
 std::string Request::get_temp_body(void) const { return _temp_body; }
+Location Request::get_location(void) const { return _location; }
+short Request::get_status_code(void) const { return _status_code; }
 short Request::get_header_status(void) const { return _header_status; }
 short Request::get_body_status(void) const { return _body_status; }
-
-std::ostream &operator<<(std::ostream &output, Request const &i)
-{
-	output << "i.get_method():			" << i.get_method() << std::endl;
-	output << "i.get_path():			" << i.get_path() << std::endl;
-	output << "i.get_connection():		" << i.get_connection() << std::endl;
-	output << "i.get_content_length():		" << i.get_content_length() << std::endl;
-	output << "i.get_transfer_encoding():	" << i.get_transfer_encoding() << std::endl;
-	output << "i.get_temp_body():		" << i.get_temp_body() << std::endl;
-	return output;
-}
 
 //////////////////////////////////////////////////
 // Response class
@@ -79,7 +71,6 @@ Handle_request::Handle_request() {}
 
 int Handle_request::recv_request(int fd, Server &server)
 {
-	std::cout << "IN recv_request" << std::endl;
 	char temp[BUFFER_SIZE];
 
 	/// if server doesn't exist, add it to the map
@@ -93,7 +84,6 @@ int Handle_request::recv_request(int fd, Server &server)
 	std::string received(temp);
 	if (r < 1)
 	{
-		// Needs response here
 		requests.erase(fd);
 		return FAILED;
 	}
@@ -119,61 +109,46 @@ int Handle_request::recv_request(int fd, Server &server)
 		// parse header else parse body
 		if (requests[fd].first.get_header_status() < PARSED)
 		{
-			request_first_line(fd, received, server);
+			int first_line_status = request_first_line(fd, received, server);
+			if (!first_line_status)
+			{
+				requests[fd].first.set_status_code(first_line_status);
+				return DONE;
+			}
 			requests[fd].first.set_connection(find_value("Connection:", received));
 			requests[fd].first.set_content_length(find_value("Content-Length:", received));
+			if (requests[fd].first.get_content_length() > server.get_client_max_body_size())
+			{
+				requests[fd].first.set_status_code(413);
+				return DONE;
+			}
 			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
+			if (requests[fd].first.get_transfer_encoding() != "NULL" && requests[fd].first.get_transfer_encoding() != "chunked")
+			{
+				requests[fd].first.set_status_code(501);
+				return DONE;
+			}
 			requests[fd].first.set_header_status(PARSED);
 		}
 
 		// recv body only in case of POST request else ignore
 		if (requests[fd].first.get_method() == "POST")
 		{
-			// Bring right location
-			Location location;
-			std::string current_path = requests[fd].first.get_path();
-
-			do
-			{
-				location = wanted_location(current_path, server);
-
-				if (location.get_uri() == "NULL")
-				{
-					size_t pos = current_path.find_last_of("/");
-					if (pos != std::string::npos)
-						current_path = current_path.substr(0, pos);
-				}
-				else
-					break;
-			} while (current_path.size());
-
-			// if location isn't found, use root location
-			if (location.get_uri() == "NULL")
-				location = wanted_location("/", server);
-
-			// Check if location accept POST method before reading the body
-			std::vector<std::string> allow_methods = location.get_allow_methods();
-			if (!std::count(allow_methods.begin(), allow_methods.end(), "POST"))
-				return FAILED;
-
 			// Change Request path to the right path based on location root
-			size_t from_path = location.get_uri().size() == 1 ? 0 : location.get_uri().size();
-			requests[fd].first.set_path(location.get_root() + requests[fd].first.get_path().substr(from_path));
+			// size_t from_path = location.get_uri().size() == 1 ? 0 : location.get_uri().size();
+			// requests[fd].first.set_path(location.get_root() + requests[fd].first.get_path().substr(from_path));
 		}
 	}
-
 	return treat_request(fd, server);
 }
 int Handle_request::treat_request(int fd, Server &server)
 {
-	std::cout << "IN treat_request" << std::endl;
 	if (requests[fd].first.get_method() == "GET")
-		Handle_request::get_handle(fd, server);
+		return Handle_request::get_handle(fd, server);
 	else if (requests[fd].first.get_method() == "POST")
-		Handle_request::post_handle(fd, server);
-	else if (requests[fd].first.get_method() == "DELETE")
-		Handle_request::delete_handle(fd, server);
-	return DONE;
+		return Handle_request::post_handle(fd, server);
+	else
+		return Handle_request::delete_handle(fd, server);
 }
 int Handle_request::send_response(int fd)
 {
@@ -201,20 +176,23 @@ int Handle_request::send_response(int fd)
 	return KILL_CONNECTION;
 }
 
-void Handle_request::get_handle(int fd, Server &server)
+int Handle_request::get_handle(int fd, Server &server)
 {
 	(void)fd;
 	(void)server;
+	return DONE;
 }
-void Handle_request::post_handle(int fd, Server &server)
+int Handle_request::post_handle(int fd, Server &server)
 {
 	(void)fd;
 	(void)server;
+	return DONE;
 }
-void Handle_request::delete_handle(int fd, Server &server)
+int Handle_request::delete_handle(int fd, Server &server)
 {
 	(void)fd;
 	(void)server;
+	return DONE;
 }
 
 int Handle_request::request_first_line(int fd, std::string received, Server &server)
@@ -230,7 +208,9 @@ int Handle_request::request_first_line(int fd, std::string received, Server &ser
 		return 400;
 
 	std::vector<std::string> splitted_first_line = split_string(received.substr(pos, end_pos - pos), " ");
-	requests[fd].first.set_location(right_location(fd, splitted_first_line[1], server));
+	requests[fd].first.set_location(right_location(splitted_first_line[1], server));
+	if (requests[fd].first.get_location().get_uri() == "NULL")
+		return 404;
 
 	if (is_method_allowed(fd, splitted_first_line[0]))
 		requests[fd].first.set_method(splitted_first_line[0]);
@@ -254,26 +234,26 @@ std::string Handle_request::find_value(std::string key, std::string received)
 	std::vector<std::string> splitted_line = split_string(whole_line, " ");
 	return splitted_line[1];
 }
-Location Handle_request::right_location(int fd, std::string path, Server &server)
+Location Handle_request::right_location(std::string path, Server &server)
 {
 	Location location;
-	std::string current_path = requests[fd].first.get_path();
 
 	do
 	{
-		location = wanted_location(current_path, server);
+		location = wanted_location(path, server);
 
 		if (location.get_uri() == "NULL")
 		{
-			size_t pos = current_path.find_last_of("/");
+			size_t pos = path.find_last_of("/");
 			if (pos != std::string::npos)
-				current_path = current_path.substr(0, pos);
+				path = path.substr(0, pos);
 		}
 		else
 			break;
-	} while (current_path.size());
+	} while (path.size());
 
 	// if location isn't found, use root location
+	// if no root location is found and empty location is returned
 	if (location.get_uri() == "NULL")
 		location = wanted_location("/", server);
 

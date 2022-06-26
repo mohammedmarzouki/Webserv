@@ -87,16 +87,10 @@ void Parser::server_directives(Server &server)
 	}
 	else if (_lookahead.get_type() == "client_max_body_size")
 	{
-		std::string size;
-
 		eat("client_max_body_size");
 		if (_lookahead.get_type() == "number")
 		{
-			size = _lookahead.get_value();
-			eat(_lookahead.get_type());
-			if (_lookahead.get_type() == "string")
-				size += _lookahead.get_value();
-			server.set_client_max_body_size(size);
+			server.set_client_max_body_size(_lookahead.get_value());
 			eat(_lookahead.get_type());
 		}
 		eat(";");
