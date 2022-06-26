@@ -36,6 +36,7 @@ private:
 	std::string _transfer_encoding;
 	std::string _temp_header;
 	std::string _temp_body;
+	Location _location;
 	short _header_status;
 	short _body_status;
 
@@ -51,6 +52,7 @@ public:
 	void set_temp_body(std::string);
 	void set_header_status(short);
 	void set_body_status(short);
+	void set_location(Location);
 	std::string get_method(void) const;
 	std::string get_path(void) const;
 	std::string get_connection(void) const;
@@ -60,6 +62,7 @@ public:
 	std::string get_temp_body(void) const;
 	short get_header_status(void) const;
 	short get_body_status(void) const;
+	Location get_location(void) const;
 };
 std::ostream &operator<<(std::ostream &, Request const &);
 
@@ -95,7 +98,7 @@ public:
 class Handle_request
 {
 private:
-	std::map<int, std::pair<Request, Response> > requests;
+	std::map<int, std::pair<Request, Response>> requests;
 
 public:
 	Handle_request();
@@ -104,9 +107,11 @@ public:
 	int treat_request(int, Server &);
 	int send_response(int);
 
-	int request_first_line(std::string, Request &);
+	int request_first_line(int, std::string, Server &);
 	std::string find_value(std::string, std::string);
+	Location right_location(int, std::string, Server &);
 	Location wanted_location(std::string, Server &);
+	bool is_method_allowed(int fd, std::string method);
 	std::vector<std::string> split_string(std::string, std::string);
 
 	void get_handle(int, Server &);

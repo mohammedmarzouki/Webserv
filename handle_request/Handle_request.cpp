@@ -22,6 +22,7 @@ void Request::set_temp_header(std::string temp_header) { this->_temp_header = te
 void Request::set_temp_body(std::string temp_body) { this->_temp_body = temp_body; }
 void Request::set_header_status(short header_status) { this->_header_status = header_status; }
 void Request::set_body_status(short body_status) { this->_body_status = body_status; }
+void Request::set_location(Location location) { this->_location = location; }
 std::string Request::get_method(void) const { return _method; }
 std::string Request::get_path(void) const { return _path; }
 std::string Request::get_connection(void) const { return _connection; }
@@ -46,7 +47,13 @@ std::ostream &operator<<(std::ostream &output, Request const &i)
 //////////////////////////////////////////////////
 // Response class
 //////////////////////////////////////////////////
-Response::Response() : _status_line("HTTP/1.1"), _connection("NULL"), _content_length("NULL"), _content_type("NULL") {}
+Response::Response()
+{
+	_status_line = "HTTP/1.1";
+	_connection = "NULL";
+	_content_length = "NULL";
+	_content_type = "NULL";
+}
 
 void Response::set_status_line(std::string status_line) { this->_status_line = status_line; }
 void Response::set_connection(std::string connection) { this->_connection = connection; }
@@ -86,36 +93,40 @@ int Handle_request::recv_request(int fd, Server &server)
 	std::string received(temp);
 	if (r < 1)
 	{
-		std::cout << "HERE" << std::endl;
+		// Needs response here
 		requests.erase(fd);
 		return FAILED;
 	}
 	else
 	{
 		// recv header
-		size_t header_end = received.find("\r\n\r\n");
-		if (!requests[fd].first.get_header_status() && header_end == std::string::npos)
+		if (!requests[fd].first.get_header_status())
 		{
-			requests[fd].first.set_temp_header(requests[fd].first.get_temp_header() + received);
-			return CHUNCKED;
-		}
-		else if (!requests[fd].first.get_header_status() && header_end != std::string::npos)
-		{
-			received = requests[fd].first.get_temp_header() + received;
-			requests[fd].first.set_temp_body(received.substr(header_end + 4));
-			requests[fd].first.set_header_status(READ);
+			size_t header_end = received.find("\r\n\r\n");
+			if (header_end == std::string::npos)
+			{
+				requests[fd].first.set_temp_header(requests[fd].first.get_temp_header() + received);
+				return CHUNCKED;
+			}
+			else
+			{
+				received = requests[fd].first.get_temp_header() + received;
+				requests[fd].first.set_temp_body(received.substr(header_end + 4));
+				requests[fd].first.set_header_status(READ);
+			}
 		}
 
 		// parse header else parse body
 		if (requests[fd].first.get_header_status() < PARSED)
 		{
-			request_first_line(received, requests[fd].first);
+			request_first_line(fd, received, server);
 			requests[fd].first.set_connection(find_value("Connection:", received));
 			requests[fd].first.set_content_length(find_value("Content-Length:", received));
 			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
 			requests[fd].first.set_header_status(PARSED);
 		}
 
+		// recv body only in case of POST request else ignore
 		if (requests[fd].first.get_method() == "POST")
 		{
 			// Bring right location
@@ -206,7 +217,7 @@ void Handle_request::delete_handle(int fd, Server &server)
 	(void)server;
 }
 
-int Handle_request::request_first_line(std::string received, Request &request)
+int Handle_request::request_first_line(int fd, std::string received, Server &server)
 {
 	size_t pos;
 	size_t end_pos;
@@ -214,14 +225,22 @@ int Handle_request::request_first_line(std::string received, Request &request)
 	if ((pos = received.find("GET")) == std::string::npos)
 		if ((pos = received.find("POST")) == std::string::npos)
 			if ((pos = received.find("DELETE")) == std::string::npos)
-				return -1;
+				return 501;
 	if ((end_pos = received.find("\r\n", pos)) == std::string::npos)
-		return -1;
+		return 400;
 
 	std::vector<std::string> splitted_first_line = split_string(received.substr(pos, end_pos - pos), " ");
-	request.set_method(splitted_first_line[0]);
-	request.set_path(splitted_first_line[1]);
-	return 1;
+	requests[fd].first.set_location(right_location(fd, splitted_first_line[1], server));
+
+	if (is_method_allowed(fd, splitted_first_line[0]))
+		requests[fd].first.set_method(splitted_first_line[0]);
+	else
+		return 405;
+	if (splitted_first_line[1].size() <= 1024)
+		requests[fd].first.set_path(splitted_first_line[1]);
+	else
+		return 414;
+	return 0;
 }
 std::string Handle_request::find_value(std::string key, std::string received)
 {
@@ -235,6 +254,31 @@ std::string Handle_request::find_value(std::string key, std::string received)
 	std::vector<std::string> splitted_line = split_string(whole_line, " ");
 	return splitted_line[1];
 }
+Location Handle_request::right_location(int fd, std::string path, Server &server)
+{
+	Location location;
+	std::string current_path = requests[fd].first.get_path();
+
+	do
+	{
+		location = wanted_location(current_path, server);
+
+		if (location.get_uri() == "NULL")
+		{
+			size_t pos = current_path.find_last_of("/");
+			if (pos != std::string::npos)
+				current_path = current_path.substr(0, pos);
+		}
+		else
+			break;
+	} while (current_path.size());
+
+	// if location isn't found, use root location
+	if (location.get_uri() == "NULL")
+		location = wanted_location("/", server);
+
+	return location;
+}
 Location Handle_request::wanted_location(std::string path, Server &server)
 {
 	std::vector<Location> locations = server.get_locations();
@@ -247,6 +291,13 @@ Location Handle_request::wanted_location(std::string path, Server &server)
 		it++;
 	}
 	return Location();
+}
+bool Handle_request::is_method_allowed(int fd, std::string method)
+{
+	std::vector<std::string> allow_methods = requests[fd].first.get_location().get_allow_methods();
+	if (std::count(allow_methods.begin(), allow_methods.end(), method))
+		return true;
+	return false;
 }
 std::vector<std::string> Handle_request::split_string(std::string str, std::string delimiter)
 {
