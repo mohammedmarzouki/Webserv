@@ -110,7 +110,7 @@ int Handle_request::recv_request(int fd, Server &server)
 		if (requests[fd].first.get_header_status() < PARSED)
 		{
 			int first_line_status = request_first_line(fd, received, server);
-			if (!first_line_status)
+			if (first_line_status)
 			{
 				requests[fd].first.set_status_code(first_line_status);
 				return DONE;
@@ -128,15 +128,17 @@ int Handle_request::recv_request(int fd, Server &server)
 				requests[fd].first.set_status_code(501);
 				return DONE;
 			}
+			fix_path(requests[fd].first);
 			requests[fd].first.set_header_status(PARSED);
 		}
-
 		// recv body only in case of POST request else ignore
 		if (requests[fd].first.get_method() == "POST")
 		{
-			// Change Request path to the right path based on location root
-			// size_t from_path = location.get_uri().size() == 1 ? 0 : location.get_uri().size();
-			// requests[fd].first.set_path(location.get_root() + requests[fd].first.get_path().substr(from_path));
+			// - right location
+			// - is_method_allowed
+			// - fix_path
+			// are already checked on request_first_line()
+			PRINT(requests[fd].first.get_path());
 		}
 	}
 	return treat_request(fd, server);
@@ -211,7 +213,7 @@ int Handle_request::request_first_line(int fd, std::string received, Server &ser
 	if (requests[fd].first.get_location().get_uri() == "NULL")
 		return 404;
 
-	if (is_method_allowed(fd, splitted_first_line[0]))
+	if (is_method_allowed(requests[fd].first.get_location(), splitted_first_line[0]))
 		requests[fd].first.set_method(splitted_first_line[0]);
 	else
 		return 405;
@@ -252,7 +254,7 @@ Location Handle_request::right_location(std::string path, Server &server)
 	} while (path.size());
 
 	// if location isn't found, use root location
-	// if no root location is found and empty location is returned
+	// if no root location is found an empty location is returned
 	if (location.get_uri() == "NULL")
 		location = wanted_location("/", server);
 
@@ -271,12 +273,21 @@ Location Handle_request::wanted_location(std::string path, Server &server)
 	}
 	return Location();
 }
-bool Handle_request::is_method_allowed(int fd, std::string method)
+bool Handle_request::is_method_allowed(Location location, std::string method)
 {
-	std::vector<std::string> allow_methods = requests[fd].first.get_location().get_allow_methods();
+	std::vector<std::string> allow_methods = location.get_allow_methods();
 	if (std::count(allow_methods.begin(), allow_methods.end(), method))
 		return true;
 	return false;
+}
+void Handle_request::fix_path(Request &request)
+{
+	Location location = request.get_location();
+	size_t uri_size = location.get_root().size();
+
+	// uri.size() == 1 => "/"
+	uri_size = uri_size == 1 ? 0 : uri_size;
+	request.set_path(location.get_root() + request.get_path().substr(uri_size));
 }
 std::vector<std::string> Handle_request::split_string(std::string str, std::string delimiter)
 {

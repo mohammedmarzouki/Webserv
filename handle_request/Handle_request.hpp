@@ -1,6 +1,9 @@
 #if !defined(HANDLE_REQUEST_HPP)
 #define HANDLE_REQUEST_HPP
 
+#define PRINT_ERR(err) std::cerr << err << std::endl
+#define PRINT(msg) std::cout << msg << std::endl
+
 // header and body status
 #define RECEIVE 0
 #define READ 1
@@ -118,7 +121,8 @@ public:
 	std::string find_value(std::string, std::string);
 	Location right_location(std::string, Server &);
 	Location wanted_location(std::string, Server &);
-	bool is_method_allowed(int fd, std::string method);
+	bool is_method_allowed(Location, std::string);
+	void fix_path(Request &);
 	std::vector<std::string> split_string(std::string, std::string);
 };
 
