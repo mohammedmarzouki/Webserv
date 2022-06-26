@@ -152,13 +152,12 @@ int Handle_request::treat_request(int fd, Server &server)
 }
 int Handle_request::send_response(int fd)
 {
-	std::cout << "IN send_request" << std::endl;
 	char buffer[BUFFER_SIZE];
 
 	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
 	send(fd, buffer, strlen(buffer), 0);
 
-	sprintf(buffer, "Connection: close\r\n");
+	sprintf(buffer, "Connection: keep_alive\r\n");
 	send(fd, buffer, strlen(buffer), 0);
 
 	sprintf(buffer, "Content-Length: %u\r\n", 10);
@@ -173,7 +172,7 @@ int Handle_request::send_response(int fd)
 	sprintf(buffer, "tatatatata");
 	send(fd, buffer, strlen(buffer), 0);
 
-	return KILL_CONNECTION;
+	return KEEP_ALIVE;
 }
 
 int Handle_request::get_handle(int fd, Server &server)
