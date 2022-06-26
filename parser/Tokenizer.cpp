@@ -29,6 +29,7 @@ void Tokenizer::fill_specs()
 	_specs.push_back("index");
 	_specs.push_back("allow_methods");
 	_specs.push_back("redirect");
+	_specs.push_back("upload");
 	_specs.push_back("autoindex");
 	_specs.push_back("cgi_pass");
 

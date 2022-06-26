@@ -159,6 +159,16 @@ void Parser::location_directives(Location &location)
 		}
 		eat(";");
 	}
+	else if (_lookahead.get_type() == "upload")
+	{
+		eat("upload");
+		if (_lookahead.get_type() == "uri")
+		{
+			location.set_upload(_lookahead.get_value());
+			eat(_lookahead.get_type());
+		}
+		eat(";");
+	}
 	else if (_lookahead.get_type() == "autoindex")
 	{
 		eat("autoindex");

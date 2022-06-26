@@ -64,6 +64,8 @@ std::string Regex::match(std::string &regex, std::string &string)
 		return match_allow_methods(string);
 	else if (regex == "redirect")
 		return match_return(string);
+	else if (regex == "upload")
+		return match_upload(string);
 	else if (regex == "autoindex")
 		return match_autoindex(string);
 	else if (regex == "cgi_pass")
@@ -162,6 +164,10 @@ std::string Regex::match_allow_methods(std::string &string)
 std::string Regex::match_return(std::string &string)
 {
 	return match_keyword(string, "return", 6);
+}
+std::string Regex::match_upload(std::string &string)
+{
+	return match_keyword(string, "upload", 6);
 }
 std::string Regex::match_autoindex(std::string &string)
 {
@@ -273,6 +279,7 @@ void Location::set_root(std::string root) { _root = root; }
 void Location::add_index(std::string index) { _index.push_back(index); }
 void Location::add_allow_methods(std::string allow_methods) { _allow_methods.push_back(allow_methods); }
 void Location::add_return(std::string redirect) { _return.push_back(redirect); }
+void Location::set_upload(std::string upload) { _upload = upload; }
 void Location::set_autoindex(std::string autoindex) { _autoindex = autoindex; }
 void Location::set_cgi_pass(std::string cgi_pass) { _cgi_pass = cgi_pass; }
 
@@ -281,6 +288,7 @@ std::string Location::get_root() const { return _root; }
 std::vector<std::string> Location::get_index() const { return _index; }
 std::vector<std::string> Location::get_allow_methods() const { return _allow_methods; }
 std::vector<std::string> Location::get_return() const { return _return; }
+std::string Location::get_upload() const { return _upload; }
 std::string Location::get_autoindex() const { return _autoindex; }
 std::string Location::get_cgi_pass() const { return _cgi_pass; }
 
@@ -372,6 +380,7 @@ void print_servers(std::vector<Server> &servers)
 			print_vector(it2->get_allow_methods());
 			std::cout << "	return:		";
 			print_vector(it2->get_return());
+			std::cout << "	upload:		" << it2->get_upload() << std::endl;
 			std::cout << "	autoindex:		" << it2->get_autoindex() << std::endl;
 			std::cout << "	cgi_pass:		" << it2->get_cgi_pass() << std::endl;
 
