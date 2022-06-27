@@ -144,6 +144,8 @@ void Parser::location_directives(Location &location)
 		eat("allow_methods");
 		while (_lookahead.get_value() != ";" && _lookahead.get_type() == "string")
 		{
+			if (_lookahead.get_value() != "GET" && _lookahead.get_value() != "POST" && _lookahead.get_value() != "DELETE")
+				throw std::string("Unexpected token: " + _lookahead.get_value());
 			location.add_allow_methods(_lookahead.get_value());
 			eat(_lookahead.get_type());
 		}
