@@ -92,7 +92,7 @@ int Handle_request::recv_request(int fd, Server &server)
 	else
 	{
 		temp[r] = '\0';
-		std::string received(temp);
+		std::string received(temp, r);
 		// recv header
 		if (!requests[fd].first.get_header_status())
 		{
