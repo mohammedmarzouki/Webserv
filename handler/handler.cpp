@@ -66,7 +66,7 @@ Server &search_server(const int &fd)
 
 void ReadyToRead(int &fd, fd_set &rd, fd_set &wr, int &max_fd)
 {
-	PRINT(fd);
+	// PRINT(fd);
 	if (isserver(fd))
 	{
 		int client;
@@ -97,7 +97,7 @@ void ReadyToRead(int &fd, fd_set &rd, fd_set &wr, int &max_fd)
 void ReadyToWrite(int &fd, fd_set &rd, fd_set &wr, int &max_fd)
 {
 
-	PRINT(fd);
+	// PRINT(fd);
 	switch (handler.send_response(fd))
 	{
 	case KILL_CONNECTION:

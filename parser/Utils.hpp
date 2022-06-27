@@ -57,6 +57,7 @@ public:
 	std::string match_index(std::string &);
 	std::string match_allow_methods(std::string &);
 	std::string match_return(std::string &);
+	std::string match_upload(std::string &);
 	std::string match_autoindex(std::string &);
 	std::string match_cgi_pass(std::string &);
 
@@ -77,6 +78,7 @@ private:
 	std::vector<std::string> _index;
 	std::vector<std::string> _allow_methods;
 	std::vector<std::string> _return;
+	std::string _upload;
 	std::string _autoindex;
 	std::string _cgi_pass;
 
@@ -92,6 +94,7 @@ public:
 	void add_index(std::string);
 	void add_allow_methods(std::string);
 	void add_return(std::string);
+	void set_upload(std::string);
 	void set_autoindex(std::string);
 	void set_cgi_pass(std::string);
 	std::string get_uri() const;
@@ -99,6 +102,7 @@ public:
 	std::vector<std::string> get_index() const;
 	std::vector<std::string> get_allow_methods() const;
 	std::vector<std::string> get_return() const;
+	std::string get_upload() const;
 	std::string get_autoindex() const;
 	std::string get_cgi_pass() const;
 };
@@ -113,7 +117,7 @@ private:
 	short _port;
 	std::vector<std::string> _server_name;
 	std::vector<std::string> _error_page;
-	std::string _client_max_body_size;
+	int _client_max_body_size;
 	std::vector<Location> _locations;
 
 public:
@@ -133,7 +137,7 @@ public:
 	short get_port() const;
 	std::vector<std::string> get_server_name() const;
 	std::vector<std::string> get_error_page() const;
-	std::string get_client_max_body_size() const;
+	int get_client_max_body_size() const;
 	std::vector<Location> get_locations() const;
 };
 

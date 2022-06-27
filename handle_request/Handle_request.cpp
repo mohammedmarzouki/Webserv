@@ -8,15 +8,16 @@ Request::Request()
 	_method = "NULL";
 	_path = "NULL";
 	_connection = "NULL";
-	_content_length = "NULL";
+	_content_length = 0;
 	_transfer_encoding = "NULL";
 	_header_status = RECEIVE;
+	_status_code = 200;
 }
 
 void Request::set_method(std::string method) { this->_method = method; }
 void Request::set_path(std::string path) { this->_path = path; }
 void Request::set_connection(std::string connection) { this->_connection = connection; }
-void Request::set_content_length(std::string content_length) { this->_content_length = content_length; }
+void Request::set_content_length(std::string content_length) { this->_content_length = atoi(content_length.c_str()); }
 void Request::set_transfer_encoding(std::string transfer_encoding) { this->_transfer_encoding = transfer_encoding; }
 void Request::set_temp_header(std::string temp_header) { this->_temp_header = temp_header; }
 void Request::set_temp_body(std::string temp_body) { this->_temp_body = temp_body; }
@@ -27,7 +28,7 @@ void Request::set_body_status(short body_status) { this->_body_status = body_sta
 std::string Request::get_method(void) const { return _method; }
 std::string Request::get_path(void) const { return _path; }
 std::string Request::get_connection(void) const { return _connection; }
-std::string Request::get_content_length(void) const { return _content_length; }
+int Request::get_content_length(void) const { return _content_length; }
 std::string Request::get_transfer_encoding(void) const { return _transfer_encoding; }
 std::string Request::get_temp_header(void) const { return _temp_header; }
 std::string Request::get_temp_body(void) const { return _temp_body; }
@@ -138,7 +139,12 @@ int Handle_request::recv_request(int fd, Server &server)
 			// - is_method_allowed
 			// - fix_path
 			// are already checked on request_first_line()
-			PRINT(requests[fd].first.get_path());
+
+			if (requests[fd].first.get_location().get_upload() == "NULL")
+			{
+				requests[fd].first.set_status_code(501);
+				return DONE;
+			}
 		}
 	}
 	return treat_request(fd, server);
@@ -283,11 +289,12 @@ bool Handle_request::is_method_allowed(Location location, std::string method)
 void Handle_request::fix_path(Request &request)
 {
 	Location location = request.get_location();
-	size_t uri_size = location.get_root().size();
+	std::string uri = request.get_method() == "POST" ? location.get_upload() : location.get_root();
+	size_t route_size = location.get_uri().size();
 
 	// uri.size() == 1 => "/"
-	uri_size = uri_size == 1 ? 0 : uri_size;
-	request.set_path(location.get_root() + request.get_path().substr(uri_size));
+	route_size = route_size == 1 ? 0 : route_size;
+	request.set_path(uri + request.get_path().substr(route_size));
 }
 std::vector<std::string> Handle_request::split_string(std::string str, std::string delimiter)
 {

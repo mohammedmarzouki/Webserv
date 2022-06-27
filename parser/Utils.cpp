@@ -64,6 +64,8 @@ std::string Regex::match(std::string &regex, std::string &string)
 		return match_allow_methods(string);
 	else if (regex == "redirect")
 		return match_return(string);
+	else if (regex == "upload")
+		return match_upload(string);
 	else if (regex == "autoindex")
 		return match_autoindex(string);
 	else if (regex == "cgi_pass")
@@ -163,6 +165,10 @@ std::string Regex::match_return(std::string &string)
 {
 	return match_keyword(string, "return", 6);
 }
+std::string Regex::match_upload(std::string &string)
+{
+	return match_keyword(string, "upload", 6);
+}
 std::string Regex::match_autoindex(std::string &string)
 {
 	return match_keyword(string, "autoindex", 9);
@@ -249,6 +255,7 @@ Location::Location()
 	this->_root = "NULL";
 	this->_autoindex = "off";
 	this->_cgi_pass = "NULL";
+	this->_upload = "NULL";
 }
 Location::Location(const Location &src)
 {
@@ -263,6 +270,7 @@ Location &Location::operator=(const Location &src)
 	this->_index = src._index;
 	this->_allow_methods = src._allow_methods;
 	this->_return = src._return;
+	this->_upload = src._upload;
 	this->_autoindex = src._autoindex;
 	this->_cgi_pass = src._cgi_pass;
 	return *this;
@@ -273,6 +281,7 @@ void Location::set_root(std::string root) { _root = root; }
 void Location::add_index(std::string index) { _index.push_back(index); }
 void Location::add_allow_methods(std::string allow_methods) { _allow_methods.push_back(allow_methods); }
 void Location::add_return(std::string redirect) { _return.push_back(redirect); }
+void Location::set_upload(std::string upload) { _upload = upload; }
 void Location::set_autoindex(std::string autoindex) { _autoindex = autoindex; }
 void Location::set_cgi_pass(std::string cgi_pass) { _cgi_pass = cgi_pass; }
 
@@ -281,6 +290,7 @@ std::string Location::get_root() const { return _root; }
 std::vector<std::string> Location::get_index() const { return _index; }
 std::vector<std::string> Location::get_allow_methods() const { return _allow_methods; }
 std::vector<std::string> Location::get_return() const { return _return; }
+std::string Location::get_upload() const { return _upload; }
 std::string Location::get_autoindex() const { return _autoindex; }
 std::string Location::get_cgi_pass() const { return _cgi_pass; }
 
@@ -291,7 +301,7 @@ Server::Server()
 {
 	this->_host = "0.0.0.0";
 	this->_port = 8080;
-	this->_client_max_body_size = "NULL";
+	this->_client_max_body_size = 0;
 }
 Server::Server(const Server &src) { *this = src; }
 Server::~Server() {}
@@ -321,14 +331,14 @@ void Server::set_port(std::string port)
 }
 void Server::add_server_name(std::string server_name) { _server_name.push_back(server_name); }
 void Server::add_error_page(std::string error_page) { _error_page.push_back(error_page); }
-void Server::set_client_max_body_size(std::string client_max_body_size) { _client_max_body_size = client_max_body_size; }
+void Server::set_client_max_body_size(std::string client_max_body_size) { _client_max_body_size = atoi(client_max_body_size.c_str()); }
 void Server::add_location(Location location) { _locations.push_back(location); }
 
 std::string Server::get_host() const { return _host; }
 short Server::get_port() const { return _port; }
 std::vector<std::string> Server::get_server_name() const { return _server_name; }
 std::vector<std::string> Server::get_error_page() const { return _error_page; }
-std::string Server::get_client_max_body_size() const { return _client_max_body_size; }
+int Server::get_client_max_body_size() const { return _client_max_body_size; }
 std::vector<Location> Server::get_locations() const { return _locations; }
 
 //////////////////////////////////////////////////
@@ -372,6 +382,7 @@ void print_servers(std::vector<Server> &servers)
 			print_vector(it2->get_allow_methods());
 			std::cout << "	return:		";
 			print_vector(it2->get_return());
+			std::cout << "	upload:		" << it2->get_upload() << std::endl;
 			std::cout << "	autoindex:		" << it2->get_autoindex() << std::endl;
 			std::cout << "	cgi_pass:		" << it2->get_cgi_pass() << std::endl;
 
