@@ -15,19 +15,19 @@ SocketMaker::SocketMaker(Server &serv) : server(serv), location(serv.get_locatio
 	address.sin_addr.s_addr = inet_addr((serv.get_host()).c_str());
 
 	if ((_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-		throw "failed socket";
+		throw std::string("failed socket");
 	if (fcntl(_socket, F_SETFL, O_NONBLOCK))
-		throw "failed fcntl";
+		throw std::string("failed fcntl");
 
 	int bool_opt(1);
 	if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &bool_opt, sizeof(bool_opt)))
-		throw "failed socketoptions";
+		throw std::string("failed socketoptions");
 
 	if (bind(_socket, (sockaddr *)&address, sizeof(address)))
-		throw "failed bind socket";
+		throw std::string("failed bind socket");
 
 	if (listen(_socket, 1024))
-		throw "failed listening to socket";
+		throw std::string("failed listening to socket");
 }
 
 int set_servers(fd_set &rd, fd_set &wr)
@@ -124,7 +124,7 @@ void looper(std::vector<Server> servers)
 		catch (const std::string &e)
 		{
 			PRINT_ERR(e);
-			for (size_t j(0); j < servers.size(); j++)
+			for (size_t j(0); j < srv.size(); j++)
 				close(srv[j]._socket);
 			srv.clear();
 			return;
