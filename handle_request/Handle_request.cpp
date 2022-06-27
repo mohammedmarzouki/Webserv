@@ -162,10 +162,10 @@ int Handle_request::recv_request(int fd, Server &server)
 				else
 					requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1, requests[fd].first.get_path().find_last_of("/")));
 				system(requests[fd].first.get_path_to_upload().c_str());
-				upload_file.open(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
 			}
 			else
 				requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
+			upload_file.open(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
 
 			// read from socket
 			// writing what is left from first read (header read)
