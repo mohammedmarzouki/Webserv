@@ -18,11 +18,10 @@
 #define KILL_CONNECTION 0
 #define KEEP_ALIVE 1
 
-#include <iostream>
+#include "../parser/Parser.hpp"
 #include <sstream>
 #include <map>
 #include <sys/socket.h> // socket(2), accept(2), listen(2), send(2), recv(2), bind(2), connect(2), inet_addr(3), setsockopt(2), getsockname(2)
-#include "../parser/Parser.hpp"
 
 #define BUFFER_SIZE 1024
 

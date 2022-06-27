@@ -140,11 +140,24 @@ int Handle_request::recv_request(int fd, Server &server)
 			// - fix_path
 			// are already checked on request_first_line()
 
+			// if location accept POST and doesn't have directive is concidered an error
 			if (requests[fd].first.get_location().get_upload() == "NULL")
 			{
 				requests[fd].first.set_status_code(501);
 				return DONE;
 			}
+
+			// open file to upload to
+			std::string path_to_upload;
+			std::ofstream outfile;
+
+			if (requests[fd].first.get_path() == requests[fd].first.get_location().get_upload())
+				path_to_upload = "mkdir -p " + requests[fd].first.get_path().substr(1);
+			else
+				path_to_upload = "mkdir -p " + requests[fd].first.get_path().substr(1, requests[fd].first.get_path().find_last_of("/"));
+			system(path_to_upload.c_str());
+			outfile.open(requests[fd].first.get_path().substr(1).c_str());
+			
 		}
 	}
 	return treat_request(fd, server);
