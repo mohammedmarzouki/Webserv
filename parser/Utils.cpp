@@ -255,6 +255,7 @@ Location::Location()
 	this->_root = "NULL";
 	this->_autoindex = "off";
 	this->_cgi_pass = "NULL";
+	this->_upload = "NULL";
 }
 Location::Location(const Location &src)
 {
@@ -269,6 +270,7 @@ Location &Location::operator=(const Location &src)
 	this->_index = src._index;
 	this->_allow_methods = src._allow_methods;
 	this->_return = src._return;
+	this->_upload = src._upload;
 	this->_autoindex = src._autoindex;
 	this->_cgi_pass = src._cgi_pass;
 	return *this;
@@ -299,7 +301,7 @@ Server::Server()
 {
 	this->_host = "0.0.0.0";
 	this->_port = 8080;
-	this->_client_max_body_size = "NULL";
+	this->_client_max_body_size = 0;
 }
 Server::Server(const Server &src) { *this = src; }
 Server::~Server() {}
@@ -329,14 +331,14 @@ void Server::set_port(std::string port)
 }
 void Server::add_server_name(std::string server_name) { _server_name.push_back(server_name); }
 void Server::add_error_page(std::string error_page) { _error_page.push_back(error_page); }
-void Server::set_client_max_body_size(std::string client_max_body_size) { _client_max_body_size = client_max_body_size; }
+void Server::set_client_max_body_size(std::string client_max_body_size) { _client_max_body_size = atoi(client_max_body_size.c_str()); }
 void Server::add_location(Location location) { _locations.push_back(location); }
 
 std::string Server::get_host() const { return _host; }
 short Server::get_port() const { return _port; }
 std::vector<std::string> Server::get_server_name() const { return _server_name; }
 std::vector<std::string> Server::get_error_page() const { return _error_page; }
-std::string Server::get_client_max_body_size() const { return _client_max_body_size; }
+int Server::get_client_max_body_size() const { return _client_max_body_size; }
 std::vector<Location> Server::get_locations() const { return _locations; }
 
 //////////////////////////////////////////////////

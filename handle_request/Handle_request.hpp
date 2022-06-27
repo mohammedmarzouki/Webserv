@@ -35,7 +35,7 @@ private:
 	std::string _method;
 	std::string _path;
 	std::string _connection;
-	std::string _content_length;
+	int _content_length;
 	std::string _transfer_encoding;
 	std::string _temp_header;
 	std::string _temp_body;
@@ -61,7 +61,7 @@ public:
 	std::string get_method(void) const;
 	std::string get_path(void) const;
 	std::string get_connection(void) const;
-	std::string get_content_length(void) const;
+	int get_content_length(void) const;
 	std::string get_transfer_encoding(void) const;
 	std::string get_temp_header(void) const;
 	std::string get_temp_body(void) const;

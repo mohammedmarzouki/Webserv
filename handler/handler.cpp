@@ -66,6 +66,7 @@ Server &search_server(const int &fd)
 
 void ReadyToRead(int &fd, fd_set &rd, fd_set &wr, int &max_fd)
 {
+	// PRINT(fd);
 	if (isserver(fd))
 	{
 		int client;
@@ -96,6 +97,7 @@ void ReadyToRead(int &fd, fd_set &rd, fd_set &wr, int &max_fd)
 void ReadyToWrite(int &fd, fd_set &rd, fd_set &wr, int &max_fd)
 {
 
+	// PRINT(fd);
 	switch (handler.send_response(fd))
 	{
 	case KILL_CONNECTION:
@@ -129,17 +131,21 @@ void looper(std::vector<Server> servers)
 		}
 	}
 	fd_set rd, wr;
+	fd_set tmp_rd, tmp_wr;
 	int max_fd = set_servers(rd, wr);
-
 	while (1)
 	{
-		if (select(max_fd + 1, &rd, &wr, NULL, NULL) < 1)
+		FD_COPY(&rd,&tmp_rd);
+		FD_COPY(&wr,&tmp_wr);
+		for (size_t i = 0; i < srv.size(); i++)
+			FD_SET(srv[i]._socket, &rd);
+		if (select(max_fd + 1, &tmp_rd, &tmp_wr, NULL, NULL) < 1)
 			continue;
 		for (int i(0); i <= max_fd; i++)
 		{
-			if (FD_ISSET(i, &rd))
+			if (FD_ISSET(i, &tmp_rd))
 				ReadyToRead(i, rd, wr, max_fd);
-			else if (FD_ISSET(i, &wr))
+			else if (FD_ISSET(i, &tmp_wr))
 				ReadyToWrite(i, rd, wr, max_fd);
 		}
 	}
