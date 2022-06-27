@@ -117,7 +117,7 @@ private:
 	short _port;
 	std::vector<std::string> _server_name;
 	std::vector<std::string> _error_page;
-	int _client_max_body_size;
+	size_t _client_max_body_size;
 	std::vector<Location> _locations;
 
 public:
@@ -137,7 +137,7 @@ public:
 	short get_port() const;
 	std::vector<std::string> get_server_name() const;
 	std::vector<std::string> get_error_page() const;
-	int get_client_max_body_size() const;
+	size_t get_client_max_body_size() const;
 	std::vector<Location> get_locations() const;
 };
 

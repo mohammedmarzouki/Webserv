@@ -338,7 +338,7 @@ std::string Server::get_host() const { return _host; }
 short Server::get_port() const { return _port; }
 std::vector<std::string> Server::get_server_name() const { return _server_name; }
 std::vector<std::string> Server::get_error_page() const { return _error_page; }
-int Server::get_client_max_body_size() const { return _client_max_body_size; }
+size_t Server::get_client_max_body_size() const { return _client_max_body_size; }
 std::vector<Location> Server::get_locations() const { return _locations; }
 
 //////////////////////////////////////////////////

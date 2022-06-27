@@ -8,6 +8,7 @@
 #define RECEIVE 0
 #define READ 1
 #define PARSED 2
+#define FULLY_PARSED 3
 
 // Request
 #define FAILED -1
@@ -23,7 +24,7 @@
 #include <map>
 #include <sys/socket.h> // socket(2), accept(2), listen(2), send(2), recv(2), bind(2), connect(2), inet_addr(3), setsockopt(2), getsockname(2)
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 1025
 
 //////////////////////////////////////////////////
 // Request class
@@ -34,14 +35,15 @@ private:
 	std::string _method;
 	std::string _path;
 	std::string _connection;
-	int _content_length;
+	size_t _content_length;
 	std::string _transfer_encoding;
 	std::string _temp_header;
-	std::string _temp_body;
 	Location _location;
 	short _status_code;
 	short _header_status;
 	short _body_status;
+	size_t _read_bytes;
+	std::string _path_to_upload;
 
 public:
 	Request();
@@ -52,22 +54,24 @@ public:
 	void set_content_length(std::string);
 	void set_transfer_encoding(std::string);
 	void set_temp_header(std::string);
-	void set_temp_body(std::string);
 	void set_location(Location);
 	void set_status_code(short);
 	void set_header_status(short);
 	void set_body_status(short);
+	void set_path_to_upload(std::string);
+	void set_read_bytes(size_t);
 	std::string get_method(void) const;
 	std::string get_path(void) const;
 	std::string get_connection(void) const;
-	int get_content_length(void) const;
+	size_t get_content_length(void) const;
 	std::string get_transfer_encoding(void) const;
 	std::string get_temp_header(void) const;
-	std::string get_temp_body(void) const;
 	Location get_location(void) const;
 	short get_header_status(void) const;
 	short get_status_code(void) const;
 	short get_body_status(void) const;
+	size_t get_read_bytes(void) const;
+	std::string get_path_to_upload(void) const;
 };
 
 //////////////////////////////////////////////////
