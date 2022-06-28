@@ -123,39 +123,12 @@ public:
 };
 
 //////////////////////////////////////////////////
-// Response class
-//////////////////////////////////////////////////
-class Response
-{
-private:
-	std::string _status_line;
-	std::string _connection;
-	std::string _content_length;
-	std::string _content_type;
-	std::string _file_name;
-
-public:
-	Response();
-
-	void set_status_line(std::string);
-	void set_connection(std::string);
-	void set_content_length(std::string);
-	void set_content_type(std::string);
-	std::string get_status_line(void) const;
-	std::string get_connection(void) const;
-	std::string get_content_length(void) const;
-	std::string get_content_type(void) const;
-
-	void clear_response();
-};
-
-//////////////////////////////////////////////////
 // Handle_request_response class
 //////////////////////////////////////////////////
 class Handle_request_response
 {
 private:
-	std::map<int, std::pair<Request, Response> > requests;
+	std::map<int, Request> requests;
 
 public:
 	Handle_request_response();
@@ -176,6 +149,8 @@ public:
 
 	std::string header_maker(short);
 	std::string status_maker(short);
+	std::string content_type_maker(int);
+	std::string to_string(int);
 };
 
 #endif // HANDLE_REQUEST_RESPONSE_HPP

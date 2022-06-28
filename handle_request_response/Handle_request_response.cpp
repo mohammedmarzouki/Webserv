@@ -40,34 +40,6 @@ size_t Request::get_read_bytes(void) const { return _read_bytes; }
 std::string Request::get_path_to_upload(void) const { return _path_to_upload; }
 
 //////////////////////////////////////////////////
-// Response class
-//////////////////////////////////////////////////
-Response::Response()
-{
-	_status_line = "HTTP/1.1";
-	_connection = "NULL";
-	_content_length = "NULL";
-	_content_type = "NULL";
-}
-
-void Response::set_status_line(std::string status_line) { this->_status_line = status_line; }
-void Response::set_connection(std::string connection) { this->_connection = connection; }
-void Response::set_content_length(std::string content_length) { this->_content_length = content_length; }
-void Response::set_content_type(std::string content_type) { this->_content_type = content_type; }
-std::string Response::get_status_line(void) const { return _status_line; }
-std::string Response::get_connection(void) const { return _connection; }
-std::string Response::get_content_length(void) const { return _content_length; }
-std::string Response::get_content_type(void) const { return _content_type; }
-
-void Response::clear_response()
-{
-	_status_line = "HTTP/1.1";
-	_connection = "NULL";
-	_content_length = "NULL";
-	_content_type = "NULL";
-}
-
-//////////////////////////////////////////////////
 // Handle_request_response class
 //////////////////////////////////////////////////
 Handle_request_response::Handle_request_response() {}
@@ -76,10 +48,7 @@ int Handle_request_response::recv_request(int fd, Server &server)
 {
 	/// if server doesn't exist, add it to the map
 	if (requests.find(fd) == requests.end())
-	{
-		requests[fd].first = Request();
-		requests[fd].second = Response();
-	}
+		requests[fd] = Request();
 
 	char temp[BUFFER_SIZE];
 	size_t r = recv(fd, temp, BUFFER_SIZE - 1, 0);
@@ -94,50 +63,50 @@ int Handle_request_response::recv_request(int fd, Server &server)
 		temp[r] = '\0';
 		std::string received(temp, r);
 		// recv header
-		if (!requests[fd].first.get_header_status())
+		if (!requests[fd].get_header_status())
 		{
 			size_t header_end = received.find("\r\n\r\n");
 			if (header_end == std::string::npos)
 			{
-				requests[fd].first.set_temp_header(requests[fd].first.get_temp_header() + received);
+				requests[fd].set_temp_header(requests[fd].get_temp_header() + received);
 				return CHUNCKED;
 			}
 			else
 			{
-				received = requests[fd].first.get_temp_header() + received;
-				requests[fd].first.set_header_status(READ);
+				received = requests[fd].get_temp_header() + received;
+				requests[fd].set_header_status(READ);
 			}
 		}
 
 		// parse header else parse body
-		if (requests[fd].first.get_header_status() < PARSED)
+		if (requests[fd].get_header_status() < PARSED)
 		{
 			int first_line_status = request_first_line(fd, received, server);
 			if (first_line_status)
 			{
-				requests[fd].first.set_status_code(first_line_status);
+				requests[fd].set_status_code(first_line_status);
 				return FAILED;
 			}
-			requests[fd].first.set_connection(find_value("Connection:", received));
-			requests[fd].first.set_content_length(find_value("Content-Length:", received));
-			if (requests[fd].first.get_content_length() > server.get_client_max_body_size())
+			requests[fd].set_connection(find_value("Connection:", received));
+			requests[fd].set_content_length(find_value("Content-Length:", received));
+			if (requests[fd].get_content_length() > server.get_client_max_body_size())
 			{
-				requests[fd].first.set_status_code(413);
+				requests[fd].set_status_code(413);
 				return FAILED;
 			}
-			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
-			if (requests[fd].first.get_transfer_encoding() != "NULL" && requests[fd].first.get_transfer_encoding() != "chunked")
+			requests[fd].set_transfer_encoding(find_value("Transfer-Encoding:", received));
+			if (requests[fd].get_transfer_encoding() != "NULL" && requests[fd].get_transfer_encoding() != "chunked")
 			{
-				requests[fd].first.set_status_code(501);
+				requests[fd].set_status_code(501);
 				return FAILED;
 			}
-			fix_path(requests[fd].first);
-			requests[fd].first.set_header_status(PARSED);
+			fix_path(requests[fd]);
+			requests[fd].set_header_status(PARSED);
 		}
 		// recv body only in case of POST request else ignore
-		if (requests[fd].first.get_method() == "GET")
+		if (requests[fd].get_method() == "GET")
 			return Handle_request_response::get_handle(fd, server);
-		if (requests[fd].first.get_method() == "POST")
+		if (requests[fd].get_method() == "POST")
 			return Handle_request_response::post_handle(fd, received, r);
 		else
 			return Handle_request_response::delete_handle(fd, server);
@@ -155,34 +124,34 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 	/// chunked parsing
 	/// in case upload file name isn't given
 	std::ofstream upload_file;
-	if (requests[fd].first.get_header_status() == PARSED)
+	if (requests[fd].get_header_status() == PARSED)
 	{
 		received = received.substr(received.find("\r\n\r\n") + 4);
-		requests[fd].first.set_read_bytes(received.size());
-		requests[fd].first.set_header_status(FULLY_PARSED);
+		requests[fd].set_read_bytes(received.size());
+		requests[fd].set_header_status(FULLY_PARSED);
 
 		// if location accept POST and doesn't have directive is concidered an error
-		if (requests[fd].first.get_location().get_upload() == "NULL")
+		if (requests[fd].get_location().get_upload() == "NULL")
 		{
-			requests[fd].first.set_status_code(501);
+			requests[fd].set_status_code(501);
 			return FAILED;
 		}
 
 		// open file to upload to
-		if (requests[fd].first.get_path() == requests[fd].first.get_location().get_upload())
-			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1));
+		if (requests[fd].get_path() == requests[fd].get_location().get_upload())
+			requests[fd].set_path_to_upload("mkdir -p " + requests[fd].get_path().substr(1));
 		else
-			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1, requests[fd].first.get_path().find_last_of("/")));
-		system(requests[fd].first.get_path_to_upload().c_str());
+			requests[fd].set_path_to_upload("mkdir -p " + requests[fd].get_path().substr(1, requests[fd].get_path().find_last_of("/")));
+		system(requests[fd].get_path_to_upload().c_str());
 	}
 	else
-		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
-	upload_file.open(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
+		requests[fd].set_read_bytes(requests[fd].get_read_bytes() + r);
+	upload_file.open(requests[fd].get_path().substr(1).c_str(), std::ios::out | std::ios::app);
 
 	// read from socket
 	// writing what is left from first read (header read)
 	upload_file << received;
-	if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
+	if (requests[fd].get_read_bytes() < requests[fd].get_content_length())
 		return CHUNCKED;
 	return DONE;
 }
@@ -195,7 +164,7 @@ int Handle_request_response::delete_handle(int fd, Server &server)
 int Handle_request_response::send_response(int fd)
 {
 	std::string header = header_maker(fd);
-	std::cout << header << std::endl;
+	std::cout << header;
 	char buffer[BUFFER_SIZE];
 
 	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
@@ -232,16 +201,16 @@ int Handle_request_response::request_first_line(int fd, std::string received, Se
 		return 400;
 
 	std::vector<std::string> splitted_first_line = split_string(received.substr(pos, end_pos - pos), " ");
-	requests[fd].first.set_location(right_location(splitted_first_line[1], server));
-	if (requests[fd].first.get_location().get_uri() == "NULL")
+	requests[fd].set_location(right_location(splitted_first_line[1], server));
+	if (requests[fd].get_location().get_uri() == "NULL")
 		return 404;
 
-	if (is_method_allowed(requests[fd].first.get_location(), splitted_first_line[0]))
-		requests[fd].first.set_method(splitted_first_line[0]);
+	if (is_method_allowed(requests[fd].get_location(), splitted_first_line[0]))
+		requests[fd].set_method(splitted_first_line[0]);
 	else
 		return 405;
 	if (splitted_first_line[1].size() <= 1024)
-		requests[fd].first.set_path(splitted_first_line[1]);
+		requests[fd].set_path(splitted_first_line[1]);
 	else
 		return 414;
 	return 0;
@@ -334,10 +303,18 @@ std::string Handle_request_response::header_maker(short fd)
 	std::string header;
 
 	header += "HTTP/1.1 ";
-	header += status_maker(requests[fd].first.get_status_code());
-	if (requests[fd].first.get_method() != "POST")
+	header += status_maker(requests[fd].get_status_code());
+	header += "\r\n";
+	if (requests[fd].get_method() == "GET")
 	{
+		header += "Content-Length: ";
+		header += to_string(1000);
+		header += "\r\n";
+		header += "Content-Type: ";
+		header += content_type_maker(fd);
+		header += "\r\n";
 	}
+	header += "\r\n";
 	return header;
 }
 std::string Handle_request_response::status_maker(short i)
@@ -393,4 +370,18 @@ std::string Handle_request_response::status_maker(short i)
 		ss >> str;
 		return (str);
 	}
+}
+std::string Handle_request_response::content_type_maker(int fd)
+{
+	(void)fd;
+	return "application/json";
+}
+std::string Handle_request_response::to_string(int i)
+{
+	std::stringstream str;
+	std::string ret;
+
+	str << i;
+	str >> ret;
+	return ret;
 }
