@@ -42,6 +42,10 @@ std::string Request::get_path_to_upload(void) const { return _path_to_upload; }
 //////////////////////////////////////////////////
 // Handle_request_response class
 //////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+// Request
+//////////////////////////////////////////////////
 Handle_request_response::Handle_request_response() {}
 
 int Handle_request_response::recv_request(int fd, Server &server)
@@ -161,33 +165,10 @@ int Handle_request_response::delete_handle(int fd, Server &server)
 	(void)server;
 	return DONE;
 }
-int Handle_request_response::send_response(int fd)
-{
-	std::string header = header_maker(fd);
-	std::cout << header;
-	char buffer[BUFFER_SIZE];
 
-	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-	send(fd, buffer, strlen(buffer), 0);
-
-	sprintf(buffer, "Connection: keep_alive\r\n");
-	send(fd, buffer, strlen(buffer), 0);
-
-	sprintf(buffer, "Content-Length: %u\r\n", 10);
-	send(fd, buffer, strlen(buffer), 0);
-
-	sprintf(buffer, "Content-Type: %s\r\n", "text/plain");
-	send(fd, buffer, strlen(buffer), 0);
-
-	sprintf(buffer, "\r\n");
-	send(fd, buffer, strlen(buffer), 0);
-
-	sprintf(buffer, "tatatatata");
-	send(fd, buffer, strlen(buffer), 0);
-
-	return KEEP_ALIVE;
-}
-
+//////////////////////////////////////////////////
+// Request tools
+//////////////////////////////////////////////////
 int Handle_request_response::request_first_line(int fd, std::string received, Server &server)
 {
 	size_t pos;
@@ -298,85 +279,159 @@ std::vector<std::string> Handle_request_response::split_string(std::string str, 
 	return final_vector;
 }
 
+//////////////////////////////////////////////////
+// Response
+//////////////////////////////////////////////////
+int Handle_request_response::send_response(int fd)
+{
+	std::string header = header_maker(fd);
+	// std::cout << header;
+	char buffer[BUFFER_SIZE];
+
+	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "Connection: keep_alive\r\n");
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "Content-Length: %u\r\n", 10);
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "Content-Type: %s\r\n", "text/plain");
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "\r\n");
+	send(fd, buffer, strlen(buffer), 0);
+
+	sprintf(buffer, "tatatatata");
+	send(fd, buffer, strlen(buffer), 0);
+
+	return KEEP_ALIVE;
+}
+
+//////////////////////////////////////////////////
+// Response tools
+//////////////////////////////////////////////////
 std::string Handle_request_response::header_maker(short fd)
 {
+	// missing Connection
 	std::string header;
 
-	header += "HTTP/1.1 ";
-	header += status_maker(requests[fd].get_status_code());
-	header += "\r\n";
+	header = status_line_maker(requests[fd].get_status_code());
 	if (requests[fd].get_method() == "GET")
 	{
 		header += "Content-Length: ";
 		header += to_string(1000);
 		header += "\r\n";
-		header += "Content-Type: ";
-		header += content_type_maker(fd);
-		header += "\r\n";
+		header += content_type_maker(ext_from_path(requests[fd].get_path()));
 	}
 	header += "\r\n";
 	return header;
 }
-std::string Handle_request_response::status_maker(short status_code)
+std::string Handle_request_response::status_line_maker(short status_code)
 {
+	std::string base("HTTP/1.1 ");
+
 	switch (status_code)
 	{
 	case CONTINUE:
-		return ("100 Continue");
+		return base + "100 Continue\r\n";
 		break;
 	case SWITCHING_PROTOCOLS:
-		return ("101 Switching Protocols");
+		return base + "101 Switching Protocols\r\n";
 		break;
 	case OK:
-		return ("200 OK");
+		return base + "200 OK\r\n";
 		break;
 	case CREATED:
-		return ("201 Created");
+		return base + "201 Created\r\n";
 		break;
 	case MOVED_PERMANENTLY:
-		return ("301 Moved Permanently");
+		return base + "301 Moved Permanently\r\n";
 		break;
 	case FOUND:
-		return ("302 Found");
+		return base + "302 Found\r\n";
 		break;
 	case TEMPORARY_REDIRECT:
-		return ("307 Temporary Redirect");
+		return base + "307 Temporary Redirect\r\n";
 		break;
 	case PERMANENT_REDIRECT:
-		return ("308 Permanent Redirect");
+		return base + "308 Permanent Redirect\r\n";
 		break;
 	case BAD_REQUEST:
-		return ("400 Bad Request");
+		return base + "400 Bad Request\r\n";
 		break;
 	case FORBIDDEN:
-		return ("403 Forbidden");
+		return base + "403 Forbidden\r\n";
 		break;
 	case NOT_FOUND:
-		return ("404 Not Found");
+		return base + "404 Not Found\r\n";
 		break;
 	case METHOD_NOT_ALLOWED:
-		return ("405 Method Not Allowed");
+		return base + "405 Method Not Allowed\r\n";
 		break;
 	case PAYLOAD_TOO_LARGE:
-		return ("413 Payload Too Large");
+		return base + "413 Payload Too Large\r\n";
 		break;
 	case INTERNAL_SERVER_ERROR:
-		return ("500 Internal Server Error");
+		return base + "500 Internal Server Error\r\n";
 		break;
 	case NOT_IMPLEMENTED:
-		return ("501 Not Implemented");
+		return base + "501 Not Implemented\r\n";
 		break;
 	case BAD_GATEWAY:
-		return ("502 Bad Gateway");
+		return base + "502 Bad Gateway\r\n";
 		break;
 	default:
 		return to_string(status_code);
 	}
 }
-std::string Handle_request_response::content_type_maker(int fd)
+std::string Handle_request_response::content_type_maker(std::string ext)
 {
-	(void)fd;
-	return "application/json";
+	std::string base("Content-Type: ");
+
+	if (ext == ".html" || ext == ".htm")
+		return base + "text/html\r\n";
+	else if (ext == ".css")
+		return base + "text/css\r\n";
+	else if (ext == ".xml")
+		return base + "text/xml\r\n";
+	else if (ext == ".gif")
+		return base + "image/gif\r\n";
+	else if (ext == ".jpeg" || ext == ".jpg")
+		return base + "image/jpeg\r\n";
+	else if (ext == ".js")
+		return base + "application/javascript\r\n";
+	else if (ext == ".txt")
+		return base + "text/plain\r\n";
+	else if (ext == ".png")
+		return base + "image/png\r\n";
+	else if (ext == ".svg" || ext == ".svgz")
+		return base + "image/svg+xml\r\n";
+	else if (ext == ".ico")
+		return base + "image/x-icon\r\n";
+	else if (ext == ".json")
+		return base + "application/json\r\n";
+	else if (ext == ".pdf")
+		return base + "application/pdf\r\n";
+	else if (ext == ".csv")
+		return base + "text/csv\r\n";
+	else if (ext == ".ppt")
+		return base + "application/vnd.ms-powerpoint\r\n";
+	else if (ext == ".zip")
+		return base + "application/zip\r\n";
+	else if (ext == ".mp3")
+		return base + "audio/mpeg\r\n";
+	else if (ext == ".mp4")
+		return base + "video/mp4\r\n";
+	return base + "application/octet-stream\r\n";
+}
+std::string Handle_request_response::ext_from_path(std::string path)
+{
+	size_t dot_pos = path.find_last_of(".");
+	if (dot_pos != std::string::npos)
+		return path.substr(dot_pos);
+	return "";
 }
 std::string Handle_request_response::to_string(int i)
 {

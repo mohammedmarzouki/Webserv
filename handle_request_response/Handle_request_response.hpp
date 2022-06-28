@@ -148,8 +148,9 @@ public:
 	std::vector<std::string> split_string(std::string, std::string);
 
 	std::string header_maker(short);
-	std::string status_maker(short);
-	std::string content_type_maker(int);
+	std::string status_line_maker(short);
+	std::string content_type_maker(std::string);
+	std::string ext_from_path(std::string);
 	std::string to_string(int);
 };
 
