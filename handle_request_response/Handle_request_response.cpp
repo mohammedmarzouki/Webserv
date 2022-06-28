@@ -40,6 +40,16 @@ size_t Request::get_read_bytes(void) const { return _read_bytes; }
 std::string Request::get_path_to_upload(void) const { return _path_to_upload; }
 
 //////////////////////////////////////////////////
+// Request
+//////////////////////////////////////////////////
+Response::Response() {}
+
+void Response::set_bytes_sent(unsigned long long bytes_sent) { this->_bytes_sent = bytes_sent; }
+void Response::set_header_sent(bool header_sent) { this->_header_sent = header_sent; }
+unsigned long long Response::get_bytes_sent(void) const { return _bytes_sent; }
+bool Response::get_header_sent(void) const { return _header_sent; }
+
+//////////////////////////////////////////////////
 // Handle_request_response class
 //////////////////////////////////////////////////
 
@@ -52,7 +62,10 @@ int Handle_request_response::recv_request(int fd, Server &server)
 {
 	/// if server doesn't exist, add it to the map
 	if (requests.find(fd) == requests.end())
-		requests[fd] = Request();
+	{
+		requests[fd].first = Request();
+		requests[fd].second = Response();
+	}
 
 	char temp[BUFFER_SIZE];
 	size_t r = recv(fd, temp, BUFFER_SIZE - 1, 0);
@@ -67,50 +80,50 @@ int Handle_request_response::recv_request(int fd, Server &server)
 		temp[r] = '\0';
 		std::string received(temp, r);
 		// recv header
-		if (!requests[fd].get_header_status())
+		if (!requests[fd].first.get_header_status())
 		{
 			size_t header_end = received.find("\r\n\r\n");
 			if (header_end == std::string::npos)
 			{
-				requests[fd].set_temp_header(requests[fd].get_temp_header() + received);
+				requests[fd].first.set_temp_header(requests[fd].first.get_temp_header() + received);
 				return CHUNCKED;
 			}
 			else
 			{
-				received = requests[fd].get_temp_header() + received;
-				requests[fd].set_header_status(READ);
+				received = requests[fd].first.get_temp_header() + received;
+				requests[fd].first.set_header_status(READ);
 			}
 		}
 
 		// parse header else parse body
-		if (requests[fd].get_header_status() < PARSED)
+		if (requests[fd].first.get_header_status() < PARSED)
 		{
 			int first_line_status = request_first_line(fd, received, server);
 			if (first_line_status)
 			{
-				requests[fd].set_status_code(first_line_status);
+				requests[fd].first.set_status_code(first_line_status);
 				return DONE;
 			}
-			requests[fd].set_connection(find_value("Connection:", received));
-			requests[fd].set_content_length(find_value("Content-Length:", received));
-			if (requests[fd].get_content_length() > server.get_client_max_body_size())
+			requests[fd].first.set_connection(find_value("Connection:", received));
+			requests[fd].first.set_content_length(find_value("Content-Length:", received));
+			if (requests[fd].first.get_content_length() > server.get_client_max_body_size())
 			{
-				requests[fd].set_status_code(PAYLOAD_TOO_LARGE);
+				requests[fd].first.set_status_code(PAYLOAD_TOO_LARGE);
 				return DONE;
 			}
-			requests[fd].set_transfer_encoding(find_value("Transfer-Encoding:", received));
-			if (requests[fd].get_transfer_encoding() != "NULL" && requests[fd].get_transfer_encoding() != "chunked")
+			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
+			if (requests[fd].first.get_transfer_encoding() != "NULL" && requests[fd].first.get_transfer_encoding() != "chunked")
 			{
-				requests[fd].set_status_code(NOT_IMPLEMENTED);
+				requests[fd].first.set_status_code(NOT_IMPLEMENTED);
 				return DONE;
 			}
-			fix_path(requests[fd]);
-			requests[fd].set_header_status(PARSED);
+			fix_path(requests[fd].first);
+			requests[fd].first.set_header_status(PARSED);
 		}
-		// recv body only in case of POST request else ignore
-		if (requests[fd].get_method() == "GET")
+
+		if (requests[fd].first.get_method() == "GET")
 			return Handle_request_response::get_handle(fd, server);
-		if (requests[fd].get_method() == "POST")
+		if (requests[fd].first.get_method() == "POST")
 			return Handle_request_response::post_handle(fd, received, r);
 		else
 			return Handle_request_response::delete_handle(fd, server);
@@ -128,34 +141,32 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 	/// chunked parsing
 	/// in case upload file name isn't given
 	std::ofstream upload_file;
-	if (requests[fd].get_header_status() == PARSED)
+	if (requests[fd].first.get_header_status() == PARSED)
 	{
 		received = received.substr(received.find("\r\n\r\n") + 4);
-		requests[fd].set_read_bytes(received.size());
-		requests[fd].set_header_status(FULLY_PARSED);
+		requests[fd].first.set_read_bytes(received.size());
+		requests[fd].first.set_header_status(FULLY_PARSED);
 
 		// if location accept POST and doesn't have directive is concidered an error
-		if (requests[fd].get_location().get_upload() == "NULL")
+		if (requests[fd].first.get_location().get_upload() == "NULL")
 		{
-			requests[fd].set_status_code(501);
+			requests[fd].first.set_status_code(501);
 			return DONE;
 		}
 
 		// open file to upload to
-		if (requests[fd].get_path() == requests[fd].get_location().get_upload())
-			requests[fd].set_path_to_upload("mkdir -p " + requests[fd].get_path().substr(1));
+		if (requests[fd].first.get_path() == requests[fd].first.get_location().get_upload())
+			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1));
 		else
-			requests[fd].set_path_to_upload("mkdir -p " + requests[fd].get_path().substr(1, requests[fd].get_path().find_last_of("/")));
-		system(requests[fd].get_path_to_upload().c_str());
+			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1, requests[fd].first.get_path().find_last_of("/")));
+		system(requests[fd].first.get_path_to_upload().c_str());
 	}
 	else
-		requests[fd].set_read_bytes(requests[fd].get_read_bytes() + r);
-	upload_file.open(requests[fd].get_path().substr(1).c_str(), std::ios::out | std::ios::app);
+		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
+	upload_file.open(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
 
-	// read from socket
-	// writing what is left from first read (header read)
 	upload_file << received;
-	if (requests[fd].get_read_bytes() < requests[fd].get_content_length())
+	if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
 		return CHUNCKED;
 	return DONE;
 }
@@ -182,16 +193,16 @@ int Handle_request_response::request_first_line(int fd, std::string received, Se
 		return BAD_REQUEST;
 
 	std::vector<std::string> splitted_first_line = split_string(received.substr(pos, end_pos - pos), " ");
-	requests[fd].set_location(right_location(splitted_first_line[1], server));
-	if (requests[fd].get_location().get_uri() == "NULL")
+	requests[fd].first.set_location(right_location(splitted_first_line[1], server));
+	if (requests[fd].first.get_location().get_uri() == "NULL")
 		return NOT_FOUND;
 
-	if (is_method_allowed(requests[fd].get_location(), splitted_first_line[0]))
-		requests[fd].set_method(splitted_first_line[0]);
+	if (is_method_allowed(requests[fd].first.get_location(), splitted_first_line[0]))
+		requests[fd].first.set_method(splitted_first_line[0]);
 	else
 		return METHOD_NOT_ALLOWED;
 	if (splitted_first_line[1].size() <= 1024)
-		requests[fd].set_path(splitted_first_line[1]);
+		requests[fd].first.set_path(splitted_first_line[1]);
 	else
 		return REQUEST_URI_TOO_LONG;
 	return 0;
@@ -286,6 +297,10 @@ int Handle_request_response::send_response(int fd)
 {
 	std::string header = header_maker(fd);
 	// std::cout << header;
+
+	/////////////////////
+	// random response //
+	/////////////////////
 	char buffer[BUFFER_SIZE];
 
 	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
@@ -317,13 +332,13 @@ std::string Handle_request_response::header_maker(short fd)
 	// missing Connection
 	std::string header;
 
-	header = status_line_maker(requests[fd].get_status_code());
-	if (requests[fd].get_method() == "GET")
+	header = status_line_maker(requests[fd].first.get_status_code());
+	if (requests[fd].first.get_method() == "GET")
 	{
 		header += "Content-Length: ";
 		header += to_string(1000);
 		header += "\r\n";
-		header += content_type_maker(ext_from_path(requests[fd].get_path()));
+		header += content_type_maker(ext_from_path(requests[fd].first.get_path()));
 	}
 	header += "\r\n";
 	return header;

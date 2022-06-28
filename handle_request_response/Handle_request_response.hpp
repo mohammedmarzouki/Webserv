@@ -64,6 +64,8 @@
 #define DONE 1
 
 // Response
+#define HEADER_NOT_SENT 0
+#define HEADER_SENT 1
 #define KILL_CONNECTION 0
 #define KEEP_ALIVE 1
 
@@ -125,10 +127,28 @@ public:
 //////////////////////////////////////////////////
 // Handle_request_response class
 //////////////////////////////////////////////////
+class Response
+{
+private:
+	unsigned long long _bytes_sent;
+	bool _header_sent;
+
+public:
+	Response();
+
+	void set_bytes_sent(unsigned long long);
+	void set_header_sent(bool);
+	unsigned long long get_bytes_sent(void) const;
+	bool get_header_sent(void) const;
+};
+
+//////////////////////////////////////////////////
+// Handle_request_response class
+//////////////////////////////////////////////////
 class Handle_request_response
 {
 private:
-	std::map<int, Request> requests;
+	std::map<int, std::pair<Request, Response> > requests;
 
 public:
 	Handle_request_response();
