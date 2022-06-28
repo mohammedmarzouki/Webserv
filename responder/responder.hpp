@@ -52,8 +52,4 @@
 #define GATEWAY_TIMEOUT 504
 #define HTTP_VERSION_NOT_SUPPORTED 504
 
-#include "../Handle_request_response/Handle_request_response.hpp"
-
-std::string &headerMaker(Response &rp);
-
 #endif

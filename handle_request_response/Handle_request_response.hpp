@@ -98,6 +98,7 @@ public:
 	std::string get_content_length(void) const;
 	std::string get_content_type(void) const;
 
+	std::string header_maker(void);
 	void clear_response();
 };
 

@@ -59,6 +59,25 @@ std::string Response::get_connection(void) const { return _connection; }
 std::string Response::get_content_length(void) const { return _content_length; }
 std::string Response::get_content_type(void) const { return _content_type; }
 
+std::string Response::header_maker(void)
+{
+	std::string resp;
+	std::string newline = "\r\n";
+
+	resp.append("HTTP/1.1 ");
+	resp.append(_status_line);
+	resp.append(newline);
+	resp.append("Content-Length: ");
+	resp.append(_content_length);
+	resp.append(newline);
+	resp.append("Content-Type: ");
+	resp.append(_content_type);
+	resp.append(newline);
+	resp.append("Connection: ");
+	resp.append(_connection);
+	resp.append(newline + newline);
+	return (resp);
+}
 void Response::clear_response()
 {
 	_status_line = "HTTP/1.1";
@@ -151,6 +170,9 @@ int Handle_request_response::get_handle(int fd, Server &server)
 }
 int Handle_request_response::post_handle(int fd, std::string &received, int r)
 {
+	// to do:
+	/// chunked parsing
+	/// in case upload file name isn't given
 	std::ofstream upload_file;
 	if (requests[fd].first.get_header_status() == PARSED)
 	{
@@ -191,6 +213,7 @@ int Handle_request_response::delete_handle(int fd, Server &server)
 }
 int Handle_request_response::send_response(int fd)
 {
+	// std::string header = requests[fd].second.header_maker();
 	char buffer[BUFFER_SIZE];
 
 	sprintf(buffer, "HTTP/1.1 200 OK\r\n");

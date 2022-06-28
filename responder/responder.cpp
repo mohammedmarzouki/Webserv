@@ -1,26 +1,6 @@
 #include "responder.hpp"
 #include <sstream>
 
-std::string &headerMaker(Response &rp){
-    std::string resp;
-
-    std::string newline = "\r\n";
-
-    resp.append("HTTP/1.1 ");
-    resp.append(rp.get_status_line());
-    resp.append(newline);
-    resp.append("Content-Length: ");
-    resp.append(rp.get_content_length());
-    resp.append(newline);
-    resp.append("Content-Type: ");
-    resp.append(rp.get_content_type());
-    resp.append(newline);
-    resp.append("Connection: ");
-    resp.append(rp.get_connection());
-    resp.append(newline + newline);
-    return (resp);
-}
-
 // std::string &AutoindexMaker(std::string &path){
 //   std::string html = "<html><head><title>Index of " + path + "</title></head><body><h1>Index of "
 //                     + path + "</h1><hr><pre>\n";
@@ -28,7 +8,6 @@ std::string &headerMaker(Response &rp){
 //   op
 //   html += "\n</pre><hr></body>\n</html>";
 // }
-
 
 std::string statusMaker(int &i){
 switch (i) {
