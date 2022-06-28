@@ -26,18 +26,18 @@ void Request::set_header_status(short header_status) { this->_header_status = he
 void Request::set_body_status(short body_status) { this->_body_status = body_status; }
 void Request::set_read_bytes(size_t read_bytes) { this->_read_bytes = read_bytes; }
 void Request::set_path_to_upload(std::string path_to_upload) { this->_path_to_upload = path_to_upload; }
-std::string Request::get_method(void) const { return _method; }
-std::string Request::get_path(void) const { return _path; }
-std::string Request::get_connection(void) const { return _connection; }
-size_t Request::get_content_length(void) const { return _content_length; }
-std::string Request::get_transfer_encoding(void) const { return _transfer_encoding; }
-std::string Request::get_temp_header(void) const { return _temp_header; }
-Location Request::get_location(void) const { return _location; }
-short Request::get_status_code(void) const { return _status_code; }
-short Request::get_header_status(void) const { return _header_status; }
-short Request::get_body_status(void) const { return _body_status; }
-size_t Request::get_read_bytes(void) const { return _read_bytes; }
-std::string Request::get_path_to_upload(void) const { return _path_to_upload; }
+std::string Request::get_method() const { return _method; }
+std::string Request::get_path() const { return _path; }
+std::string Request::get_connection() const { return _connection; }
+size_t Request::get_content_length() const { return _content_length; }
+std::string Request::get_transfer_encoding() const { return _transfer_encoding; }
+std::string Request::get_temp_header() const { return _temp_header; }
+Location Request::get_location() const { return _location; }
+short Request::get_status_code() const { return _status_code; }
+short Request::get_header_status() const { return _header_status; }
+short Request::get_body_status() const { return _body_status; }
+size_t Request::get_read_bytes() const { return _read_bytes; }
+std::string Request::get_path_to_upload() const { return _path_to_upload; }
 
 //////////////////////////////////////////////////
 // Response class
@@ -54,10 +54,18 @@ void Response::set_bytes_sent(unsigned long bytes_sent) { this->_bytes_sent = by
 void Response::set_header(std::string header) { this->_header = header; }
 void Response::set_header_sent(bool header_sent) { this->_header_sent = header_sent; }
 void Response::set_content_length(unsigned long content_length) { this->_content_length = content_length; }
-unsigned long Response::get_bytes_sent(void) const { return _bytes_sent; }
-std::string Response::get_header(void) const { return _header; }
-bool Response::get_header_sent(void) const { return _header_sent; }
-unsigned long Response::get_content_length(void) const { return _content_length; }
+unsigned long Response::get_bytes_sent() const { return _bytes_sent; }
+std::string Response::get_header() const { return _header; }
+bool Response::get_header_sent() const { return _header_sent; }
+unsigned long Response::get_content_length() const { return _content_length; }
+
+void Response::clear_response()
+{
+	_bytes_sent = 0;
+	_header = "";
+	_header_sent = HEADER_NOT_SENT;
+	_content_length = 4;
+}
 
 //////////////////////////////////////////////////
 // Handle_request_response class
@@ -322,36 +330,16 @@ int Handle_request_response::send_response(int fd)
 	// send body in case of GET request
 	if (requests[fd].first.get_method() == "GET")
 	{
+		// send body code
 		send(fd, "succ", 4, 0);
+		requests[fd].second.clear_response();
 		return KILL_CONNECTION;
 	}
 	else
+	{
+		requests[fd].second.clear_response();
 		return KILL_CONNECTION;
-
-	/////////////////////
-	// random response //
-	/////////////////////
-	// char buffer[BUFFER_SIZE];
-
-	// sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-	// send(fd, buffer, strlen(buffer), 0);
-
-	// sprintf(buffer, "Connection: keep_alive\r\n");
-	// send(fd, buffer, strlen(buffer), 0);
-
-	// sprintf(buffer, "Content-Length: %u\r\n", 10);
-	// send(fd, buffer, strlen(buffer), 0);
-
-	// sprintf(buffer, "Content-Type: %s\r\n", "text/plain");
-	// send(fd, buffer, strlen(buffer), 0);
-
-	// sprintf(buffer, "\r\n");
-	// send(fd, buffer, strlen(buffer), 0);
-
-	// sprintf(buffer, "tatatatata");
-	// send(fd, buffer, strlen(buffer), 0);
-
-	// return KEEP_ALIVE;
+	}
 }
 
 //////////////////////////////////////////////////
@@ -359,10 +347,12 @@ int Handle_request_response::send_response(int fd)
 //////////////////////////////////////////////////
 std::string Handle_request_response::header_maker(short fd)
 {
-	// Connection not set
 	std::string header;
 
 	header = status_line_maker(requests[fd].first.get_status_code());
+	header += "Connection: ";
+	header += requests[fd].first.get_connection();
+	header += "\r\n";
 	if (requests[fd].first.get_method() == "GET")
 	{
 		header += "Content-Length: ";

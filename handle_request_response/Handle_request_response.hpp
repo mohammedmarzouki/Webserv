@@ -110,18 +110,18 @@ public:
 	void set_body_status(short);
 	void set_path_to_upload(std::string);
 	void set_read_bytes(size_t);
-	std::string get_method(void) const;
-	std::string get_path(void) const;
-	std::string get_connection(void) const;
-	size_t get_content_length(void) const;
-	std::string get_transfer_encoding(void) const;
-	std::string get_temp_header(void) const;
-	Location get_location(void) const;
-	short get_header_status(void) const;
-	short get_status_code(void) const;
-	short get_body_status(void) const;
-	size_t get_read_bytes(void) const;
-	std::string get_path_to_upload(void) const;
+	std::string get_method() const;
+	std::string get_path() const;
+	std::string get_connection() const;
+	size_t get_content_length() const;
+	std::string get_transfer_encoding() const;
+	std::string get_temp_header() const;
+	Location get_location() const;
+	short get_header_status() const;
+	short get_status_code() const;
+	short get_body_status() const;
+	size_t get_read_bytes() const;
+	std::string get_path_to_upload() const;
 };
 
 //////////////////////////////////////////////////
@@ -130,22 +130,24 @@ public:
 class Response
 {
 private:
-	unsigned long _bytes_sent;
 	std::string _header;
 	bool _header_sent;
+	unsigned long _bytes_sent;
 	unsigned long _content_length;
 
 public:
 	Response();
 
-	void set_bytes_sent(unsigned long);
 	void set_header(std::string);
 	void set_header_sent(bool);
+	void set_bytes_sent(unsigned long);
 	void set_content_length(unsigned long);
-	unsigned long get_bytes_sent(void) const;
-	std::string get_header(void) const;
-	bool get_header_sent(void) const;
-	unsigned long get_content_length(void) const;
+	std::string get_header() const;
+	bool get_header_sent() const;
+	unsigned long get_bytes_sent() const;
+	unsigned long get_content_length() const;
+
+	void clear_response();
 };
 
 //////////////////////////////////////////////////
