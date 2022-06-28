@@ -6,7 +6,7 @@
 #define SWITCHING_PROTOCOLS 101
 
 // 2xx Succesful
-#define OK 200//
+#define OK 200 //
 #define CREATED 201
 #define ACCEPTED 202
 #define NON_AUTHORITATIVE_INFORMATION 203
@@ -16,20 +16,20 @@
 
 // 3xx Redirection
 #define MULTIPLE_CHOICES 300
-#define MOVED_PERMANENTLY 301//
-#define FOUND 302//
+#define MOVED_PERMANENTLY 301 //
+#define FOUND 302             //
 #define SEE_OTHER 303
 #define NOT_MODIFIED 304
 #define USE_PROXY 305
-#define TEMPORARY_REDIRECT 307//
-#define PERMANENT_REDIRECT 308//
+#define TEMPORARY_REDIRECT 307 //
+#define PERMANENT_REDIRECT 308 //
 
 // 4xx Client Error
-#define BAD_REQUEST 400//
+#define BAD_REQUEST 400 //
 #define UNAUTHORIZED 401
 #define PAYMENT_REQUIRED 402
 #define FORBIDDEN 403
-#define NOT_FOUND 404//
+#define NOT_FOUND 404 //
 #define METHOD_NOT_ALLOWED 405
 #define NOT_ACCEPTABLE 406
 #define PROXY_AUTHENTICATION_REQUIRED 407
@@ -52,7 +52,7 @@
 #define GATEWAY_TIMEOUT 504
 #define HTTP_VERSION_NOT_SUPPORTED 504
 
-#include "../handle_request/Handle_request.hpp"
+#include "../Handle_request_response/Handle_request_response.hpp"
 
 std::string &headerMaker(Response &rp);
 

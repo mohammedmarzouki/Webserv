@@ -75,8 +75,6 @@ int main(int argc, char **argv)
 	//////////////////////////////////////////////////
 	{
 		looper(servers);
-		// Handle_request request;
-		// request.recv_request(1, servers[0]);
 	}
 	return EXIT_SUCCESS;
 }

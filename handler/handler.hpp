@@ -11,7 +11,7 @@
 #include <sys/types.h>  // kqueue(2)
 #include <unistd.h>     //close(2)
 
-#include "../handle_request/Handle_request.hpp"
+#include "../handle_request_response/Handle_request_response.hpp"
 
 class SocketMaker
 {
@@ -23,7 +23,7 @@ public:
     ~SocketMaker();
 };
 extern std::vector<SocketMaker> srv;
-extern Handle_request handler;
+extern Handle_request_response handler;
 extern std::map<int, int> cli_srv;
 
 void looper(std::vector<Server> servers);

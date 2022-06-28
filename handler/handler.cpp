@@ -1,7 +1,7 @@
 #include "handler.hpp"
 
 std::vector<SocketMaker> srv;
-Handle_request handler;
+Handle_request_response handler;
 std::map<int, int> cli_srv;
 
 SocketMaker::~SocketMaker() {}
@@ -135,8 +135,8 @@ void looper(std::vector<Server> servers)
 	int max_fd = set_servers(rd, wr);
 	while (1)
 	{
-		FD_COPY(&rd,&tmp_rd);
-		FD_COPY(&wr,&tmp_wr);
+		FD_COPY(&rd, &tmp_rd);
+		FD_COPY(&wr, &tmp_wr);
 		for (size_t i = 0; i < srv.size(); i++)
 			FD_SET(srv[i]._socket, &rd);
 		if (select(max_fd + 1, &tmp_rd, &tmp_wr, NULL, NULL) < 1)

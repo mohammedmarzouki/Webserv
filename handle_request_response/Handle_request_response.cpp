@@ -1,4 +1,4 @@
-#include "Handle_request.hpp"
+#include "Handle_request_response.hpp"
 
 //////////////////////////////////////////////////
 // Request class
@@ -68,11 +68,11 @@ void Response::clear_response()
 }
 
 //////////////////////////////////////////////////
-// Handle_request class
+// Handle_request_response class
 //////////////////////////////////////////////////
-Handle_request::Handle_request() {}
+Handle_request_response::Handle_request_response() {}
 
-int Handle_request::recv_request(int fd, Server &server)
+int Handle_request_response::recv_request(int fd, Server &server)
 {
 	/// if server doesn't exist, add it to the map
 	if (requests.find(fd) == requests.end())
@@ -136,20 +136,20 @@ int Handle_request::recv_request(int fd, Server &server)
 		}
 		// recv body only in case of POST request else ignore
 		if (requests[fd].first.get_method() == "GET")
-			return Handle_request::get_handle(fd, server);
+			return Handle_request_response::get_handle(fd, server);
 		if (requests[fd].first.get_method() == "POST")
-			return Handle_request::post_handle(fd, received, r);
+			return Handle_request_response::post_handle(fd, received, r);
 		else
-			return Handle_request::delete_handle(fd, server);
+			return Handle_request_response::delete_handle(fd, server);
 	}
 }
-int Handle_request::get_handle(int fd, Server &server)
+int Handle_request_response::get_handle(int fd, Server &server)
 {
 	(void)fd;
 	(void)server;
 	return DONE;
 }
-int Handle_request::post_handle(int fd, std::string &received, int r)
+int Handle_request_response::post_handle(int fd, std::string &received, int r)
 {
 	std::ofstream upload_file;
 	if (requests[fd].first.get_header_status() == PARSED)
@@ -183,13 +183,13 @@ int Handle_request::post_handle(int fd, std::string &received, int r)
 		return CHUNCKED;
 	return DONE;
 }
-int Handle_request::delete_handle(int fd, Server &server)
+int Handle_request_response::delete_handle(int fd, Server &server)
 {
 	(void)fd;
 	(void)server;
 	return DONE;
 }
-int Handle_request::send_response(int fd)
+int Handle_request_response::send_response(int fd)
 {
 	char buffer[BUFFER_SIZE];
 
@@ -214,7 +214,7 @@ int Handle_request::send_response(int fd)
 	return KEEP_ALIVE;
 }
 
-int Handle_request::request_first_line(int fd, std::string received, Server &server)
+int Handle_request_response::request_first_line(int fd, std::string received, Server &server)
 {
 	size_t pos;
 	size_t end_pos;
@@ -241,7 +241,7 @@ int Handle_request::request_first_line(int fd, std::string received, Server &ser
 		return 414;
 	return 0;
 }
-std::string Handle_request::find_value(std::string key, std::string received)
+std::string Handle_request_response::find_value(std::string key, std::string received)
 {
 	size_t pos = received.find(key);
 	size_t end_pos = received.find("\r\n", pos);
@@ -253,7 +253,7 @@ std::string Handle_request::find_value(std::string key, std::string received)
 	std::vector<std::string> splitted_line = split_string(whole_line, " ");
 	return splitted_line[1];
 }
-Location Handle_request::right_location(std::string path, Server &server)
+Location Handle_request_response::right_location(std::string path, Server &server)
 {
 	Location location;
 
@@ -278,7 +278,7 @@ Location Handle_request::right_location(std::string path, Server &server)
 
 	return location;
 }
-Location Handle_request::wanted_location(std::string path, Server &server)
+Location Handle_request_response::wanted_location(std::string path, Server &server)
 {
 	std::vector<Location> locations = server.get_locations();
 	std::vector<Location>::iterator it = locations.begin();
@@ -291,14 +291,14 @@ Location Handle_request::wanted_location(std::string path, Server &server)
 	}
 	return Location();
 }
-bool Handle_request::is_method_allowed(Location location, std::string method)
+bool Handle_request_response::is_method_allowed(Location location, std::string method)
 {
 	std::vector<std::string> allow_methods = location.get_allow_methods();
 	if (std::count(allow_methods.begin(), allow_methods.end(), method))
 		return true;
 	return false;
 }
-void Handle_request::fix_path(Request &request)
+void Handle_request_response::fix_path(Request &request)
 {
 	Location location = request.get_location();
 	std::string uri = request.get_method() == "POST" ? location.get_upload() : location.get_root();
@@ -308,7 +308,7 @@ void Handle_request::fix_path(Request &request)
 	route_size = route_size == 1 ? 0 : route_size;
 	request.set_path(uri + request.get_path().substr(route_size));
 }
-std::vector<std::string> Handle_request::split_string(std::string str, std::string delimiter)
+std::vector<std::string> Handle_request_response::split_string(std::string str, std::string delimiter)
 {
 	size_t pos;
 	std::string token;

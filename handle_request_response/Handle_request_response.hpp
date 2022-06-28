@@ -1,5 +1,5 @@
-#if !defined(HANDLE_REQUEST_HPP)
-#define HANDLE_REQUEST_HPP
+#if !defined(HANDLE_REQUEST_RESPONSE_HPP)
+#define HANDLE_REQUEST_RESPONSE_HPP
 
 #define PRINT_ERR(err) std::cerr << err << std::endl
 #define PRINT(msg) std::cout << msg << std::endl
@@ -102,15 +102,15 @@ public:
 };
 
 //////////////////////////////////////////////////
-// Handle_request class
+// Handle_request_response class
 //////////////////////////////////////////////////
-class Handle_request
+class Handle_request_response
 {
 private:
 	std::map<int, std::pair<Request, Response> > requests;
 
 public:
-	Handle_request();
+	Handle_request_response();
 
 	int recv_request(int, Server &);
 	int get_handle(int, Server &);
@@ -127,4 +127,4 @@ public:
 	std::vector<std::string> split_string(std::string, std::string);
 };
 
-#endif // HANDLE_REQUEST_HPP
+#endif // HANDLE_REQUEST_RESPONSE_HPP

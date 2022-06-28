@@ -14,4 +14,4 @@ void exit_err(std::string &);
 #endif // WEBSERV_HPP
 
 // () = include()
-// webserv ( handler ( Handle_request ( Parser ) ) )
+// webserv ( handler ( Handle_request_response ( Parser ) ) )
