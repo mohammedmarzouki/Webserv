@@ -59,25 +59,6 @@ std::string Response::get_connection(void) const { return _connection; }
 std::string Response::get_content_length(void) const { return _content_length; }
 std::string Response::get_content_type(void) const { return _content_type; }
 
-std::string Response::header_maker(void)
-{
-	std::string resp;
-	std::string newline = "\r\n";
-
-	resp.append("HTTP/1.1 ");
-	resp.append(_status_line);
-	resp.append(newline);
-	resp.append("Content-Length: ");
-	resp.append(_content_length);
-	resp.append(newline);
-	resp.append("Content-Type: ");
-	resp.append(_content_type);
-	resp.append(newline);
-	resp.append("Connection: ");
-	resp.append(_connection);
-	resp.append(newline + newline);
-	return (resp);
-}
 void Response::clear_response()
 {
 	_status_line = "HTTP/1.1";
@@ -213,7 +194,8 @@ int Handle_request_response::delete_handle(int fd, Server &server)
 }
 int Handle_request_response::send_response(int fd)
 {
-	// std::string header = requests[fd].second.header_maker();
+	std::string header = header_maker(fd);
+	std::cout << header << std::endl;
 	char buffer[BUFFER_SIZE];
 
 	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
@@ -345,4 +327,70 @@ std::vector<std::string> Handle_request_response::split_string(std::string str, 
 	}
 	final_vector.push_back(str);
 	return final_vector;
+}
+
+std::string Handle_request_response::header_maker(short fd)
+{
+	std::string header;
+
+	header += "HTTP/1.1 ";
+	header += status_maker(requests[fd].first.get_status_code());
+	if (requests[fd].first.get_method() != "POST")
+	{
+	}
+	return header;
+}
+std::string Handle_request_response::status_maker(short i)
+{
+	switch (i)
+	{
+	case OK:
+		return ("200 OK");
+		break;
+	case CONTINUE:
+		return ("100 CONTINUE");
+		break;
+	case SWITCHING_PROTOCOLS:
+		return ("101 SWITCHING PROTOCOLS");
+		break;
+	case CREATED:
+		return ("201 CREATED");
+		break;
+	case MOVED_PERMANENTLY:
+		return ("301 MOVED_PERMANENTLY");
+		break;
+	case FOUND:
+		return ("302 FOUND");
+		break;
+	case TEMPORARY_REDIRECT:
+		return ("307 TEMPORARY_REDIRECT");
+		break;
+	case PERMANENT_REDIRECT:
+		return ("308 PERMANENT_REDIRECT");
+		break;
+	case BAD_REQUEST:
+		return ("400 BAD_REQUEST");
+		break;
+	case FORBIDDEN:
+		return ("403 FORBIDDEN");
+		break;
+	case METHOD_NOT_ALLOWED:
+		return ("405 METHOD_NOT_ALLOWED");
+		break;
+	case NOT_FOUND:
+		return ("404 NOT_FOUND");
+		break;
+	case INTERNAL_SERVER_ERROR:
+		return ("500 INTERNAL_SERVER_ERROR");
+		break;
+	case BAD_GATEWAY:
+		return ("502 BAD_GATEWAY");
+		break;
+	default:
+		std::stringstream ss;
+		std::string str;
+		ss << i;
+		ss >> str;
+		return (str);
+	}
 }
