@@ -85,20 +85,20 @@ int Handle_request_response::recv_request(int fd, Server &server)
 			if (first_line_status)
 			{
 				requests[fd].set_status_code(first_line_status);
-				return FAILED;
+				return DONE;
 			}
 			requests[fd].set_connection(find_value("Connection:", received));
 			requests[fd].set_content_length(find_value("Content-Length:", received));
 			if (requests[fd].get_content_length() > server.get_client_max_body_size())
 			{
-				requests[fd].set_status_code(413);
-				return FAILED;
+				requests[fd].set_status_code(PAYLOAD_TOO_LARGE);
+				return DONE;
 			}
 			requests[fd].set_transfer_encoding(find_value("Transfer-Encoding:", received));
 			if (requests[fd].get_transfer_encoding() != "NULL" && requests[fd].get_transfer_encoding() != "chunked")
 			{
-				requests[fd].set_status_code(501);
-				return FAILED;
+				requests[fd].set_status_code(NOT_IMPLEMENTED);
+				return DONE;
 			}
 			fix_path(requests[fd]);
 			requests[fd].set_header_status(PARSED);
@@ -134,7 +134,7 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 		if (requests[fd].get_location().get_upload() == "NULL")
 		{
 			requests[fd].set_status_code(501);
-			return FAILED;
+			return DONE;
 		}
 
 		// open file to upload to
@@ -196,23 +196,23 @@ int Handle_request_response::request_first_line(int fd, std::string received, Se
 	if ((pos = received.find("GET")) == std::string::npos)
 		if ((pos = received.find("POST")) == std::string::npos)
 			if ((pos = received.find("DELETE")) == std::string::npos)
-				return 501;
+				return NOT_IMPLEMENTED;
 	if ((end_pos = received.find("\r\n", pos)) == std::string::npos)
-		return 400;
+		return BAD_REQUEST;
 
 	std::vector<std::string> splitted_first_line = split_string(received.substr(pos, end_pos - pos), " ");
 	requests[fd].set_location(right_location(splitted_first_line[1], server));
 	if (requests[fd].get_location().get_uri() == "NULL")
-		return 404;
+		return NOT_FOUND;
 
 	if (is_method_allowed(requests[fd].get_location(), splitted_first_line[0]))
 		requests[fd].set_method(splitted_first_line[0]);
 	else
-		return 405;
+		return METHOD_NOT_ALLOWED;
 	if (splitted_first_line[1].size() <= 1024)
 		requests[fd].set_path(splitted_first_line[1]);
 	else
-		return 414;
+		return REQUEST_URI_TOO_LONG;
 	return 0;
 }
 std::string Handle_request_response::find_value(std::string key, std::string received)
@@ -317,58 +317,60 @@ std::string Handle_request_response::header_maker(short fd)
 	header += "\r\n";
 	return header;
 }
-std::string Handle_request_response::status_maker(short i)
+std::string Handle_request_response::status_maker(short status_code)
 {
-	switch (i)
+	switch (status_code)
 	{
+	case CONTINUE:
+		return ("100 Continue");
+		break;
+	case SWITCHING_PROTOCOLS:
+		return ("101 Switching Protocols");
+		break;
 	case OK:
 		return ("200 OK");
 		break;
-	case CONTINUE:
-		return ("100 CONTINUE");
-		break;
-	case SWITCHING_PROTOCOLS:
-		return ("101 SWITCHING PROTOCOLS");
-		break;
 	case CREATED:
-		return ("201 CREATED");
+		return ("201 Created");
 		break;
 	case MOVED_PERMANENTLY:
-		return ("301 MOVED_PERMANENTLY");
+		return ("301 Moved Permanently");
 		break;
 	case FOUND:
-		return ("302 FOUND");
+		return ("302 Found");
 		break;
 	case TEMPORARY_REDIRECT:
-		return ("307 TEMPORARY_REDIRECT");
+		return ("307 Temporary Redirect");
 		break;
 	case PERMANENT_REDIRECT:
-		return ("308 PERMANENT_REDIRECT");
+		return ("308 Permanent Redirect");
 		break;
 	case BAD_REQUEST:
-		return ("400 BAD_REQUEST");
+		return ("400 Bad Request");
 		break;
 	case FORBIDDEN:
-		return ("403 FORBIDDEN");
-		break;
-	case METHOD_NOT_ALLOWED:
-		return ("405 METHOD_NOT_ALLOWED");
+		return ("403 Forbidden");
 		break;
 	case NOT_FOUND:
-		return ("404 NOT_FOUND");
+		return ("404 Not Found");
+		break;
+	case METHOD_NOT_ALLOWED:
+		return ("405 Method Not Allowed");
+		break;
+	case PAYLOAD_TOO_LARGE:
+		return ("413 Payload Too Large");
 		break;
 	case INTERNAL_SERVER_ERROR:
-		return ("500 INTERNAL_SERVER_ERROR");
+		return ("500 Internal Server Error");
+		break;
+	case NOT_IMPLEMENTED:
+		return ("501 Not Implemented");
 		break;
 	case BAD_GATEWAY:
-		return ("502 BAD_GATEWAY");
+		return ("502 Bad Gateway");
 		break;
 	default:
-		std::stringstream ss;
-		std::string str;
-		ss << i;
-		ss >> str;
-		return (str);
+		return to_string(status_code);
 	}
 }
 std::string Handle_request_response::content_type_maker(int fd)
@@ -378,10 +380,10 @@ std::string Handle_request_response::content_type_maker(int fd)
 }
 std::string Handle_request_response::to_string(int i)
 {
-	std::stringstream str;
-	std::string ret;
+	std::stringstream ss;
+	std::string str;
 
-	str << i;
-	str >> ret;
-	return ret;
+	ss << i;
+	ss >> str;
+	return str;
 }
