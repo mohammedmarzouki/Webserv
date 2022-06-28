@@ -40,14 +40,24 @@ size_t Request::get_read_bytes(void) const { return _read_bytes; }
 std::string Request::get_path_to_upload(void) const { return _path_to_upload; }
 
 //////////////////////////////////////////////////
-// Request
+// Response class
 //////////////////////////////////////////////////
-Response::Response() {}
+Response::Response()
+{
+	_bytes_sent = 0;
+	_header = "";
+	_header_sent = HEADER_NOT_SENT;
+	_content_length = 4;
+}
 
-void Response::set_bytes_sent(unsigned long long bytes_sent) { this->_bytes_sent = bytes_sent; }
+void Response::set_bytes_sent(unsigned long bytes_sent) { this->_bytes_sent = bytes_sent; }
+void Response::set_header(std::string header) { this->_header = header; }
 void Response::set_header_sent(bool header_sent) { this->_header_sent = header_sent; }
-unsigned long long Response::get_bytes_sent(void) const { return _bytes_sent; }
+void Response::set_content_length(unsigned long content_length) { this->_content_length = content_length; }
+unsigned long Response::get_bytes_sent(void) const { return _bytes_sent; }
+std::string Response::get_header(void) const { return _header; }
 bool Response::get_header_sent(void) const { return _header_sent; }
+unsigned long Response::get_content_length(void) const { return _content_length; }
 
 //////////////////////////////////////////////////
 // Handle_request_response class
@@ -295,33 +305,53 @@ std::vector<std::string> Handle_request_response::split_string(std::string str, 
 //////////////////////////////////////////////////
 int Handle_request_response::send_response(int fd)
 {
-	std::string header = header_maker(fd);
-	// std::cout << header;
+	// send header
+	if (!requests[fd].second.get_header_sent())
+	{
+		if (requests[fd].second.get_header().size() == 0)
+			requests[fd].second.set_header(header_maker(fd));
+		size_t s = send(fd, requests[fd].second.get_header().c_str(), requests[fd].second.get_header().size(), 0);
+		if (s < requests[fd].second.get_header().size())
+		{
+			requests[fd].second.set_header(requests[fd].second.get_header().substr(s));
+			return KEEP_ALIVE;
+		}
+		else
+			requests[fd].second.set_header_sent(HEADER_SENT);
+	}
+	// send body in case of GET request
+	if (requests[fd].first.get_method() == "GET")
+	{
+		send(fd, "succ", 4, 0);
+		return KILL_CONNECTION;
+	}
+	else
+		return KILL_CONNECTION;
 
 	/////////////////////
 	// random response //
 	/////////////////////
-	char buffer[BUFFER_SIZE];
+	// char buffer[BUFFER_SIZE];
 
-	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-	send(fd, buffer, strlen(buffer), 0);
+	// sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+	// send(fd, buffer, strlen(buffer), 0);
 
-	sprintf(buffer, "Connection: keep_alive\r\n");
-	send(fd, buffer, strlen(buffer), 0);
+	// sprintf(buffer, "Connection: keep_alive\r\n");
+	// send(fd, buffer, strlen(buffer), 0);
 
-	sprintf(buffer, "Content-Length: %u\r\n", 10);
-	send(fd, buffer, strlen(buffer), 0);
+	// sprintf(buffer, "Content-Length: %u\r\n", 10);
+	// send(fd, buffer, strlen(buffer), 0);
 
-	sprintf(buffer, "Content-Type: %s\r\n", "text/plain");
-	send(fd, buffer, strlen(buffer), 0);
+	// sprintf(buffer, "Content-Type: %s\r\n", "text/plain");
+	// send(fd, buffer, strlen(buffer), 0);
 
-	sprintf(buffer, "\r\n");
-	send(fd, buffer, strlen(buffer), 0);
+	// sprintf(buffer, "\r\n");
+	// send(fd, buffer, strlen(buffer), 0);
 
-	sprintf(buffer, "tatatatata");
-	send(fd, buffer, strlen(buffer), 0);
+	// sprintf(buffer, "tatatatata");
+	// send(fd, buffer, strlen(buffer), 0);
 
-	return KEEP_ALIVE;
+	// return KEEP_ALIVE;
 }
 
 //////////////////////////////////////////////////
@@ -329,14 +359,14 @@ int Handle_request_response::send_response(int fd)
 //////////////////////////////////////////////////
 std::string Handle_request_response::header_maker(short fd)
 {
-	// missing Connection
+	// Connection not set
 	std::string header;
 
 	header = status_line_maker(requests[fd].first.get_status_code());
 	if (requests[fd].first.get_method() == "GET")
 	{
 		header += "Content-Length: ";
-		header += to_string(1000);
+		header += to_string(requests[fd].second.get_content_length());
 		header += "\r\n";
 		header += content_type_maker(ext_from_path(requests[fd].first.get_path()));
 	}

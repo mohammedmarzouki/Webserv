@@ -130,16 +130,22 @@ public:
 class Response
 {
 private:
-	unsigned long long _bytes_sent;
+	unsigned long _bytes_sent;
+	std::string _header;
 	bool _header_sent;
+	unsigned long _content_length;
 
 public:
 	Response();
 
-	void set_bytes_sent(unsigned long long);
+	void set_bytes_sent(unsigned long);
+	void set_header(std::string);
 	void set_header_sent(bool);
-	unsigned long long get_bytes_sent(void) const;
+	void set_content_length(unsigned long);
+	unsigned long get_bytes_sent(void) const;
+	std::string get_header(void) const;
 	bool get_header_sent(void) const;
+	unsigned long get_content_length(void) const;
 };
 
 //////////////////////////////////////////////////
