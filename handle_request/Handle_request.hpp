@@ -113,12 +113,10 @@ public:
 	Handle_request();
 
 	int recv_request(int, Server &);
-	int treat_request(int, Server &);
-	int send_response(int);
-
 	int get_handle(int, Server &);
-	int post_handle(int, Server &);
+	int post_handle(int, std::string &, int);
 	int delete_handle(int, Server &);
+	int send_response(int);
 
 	int request_first_line(int, std::string, Server &);
 	std::string find_value(std::string, std::string);

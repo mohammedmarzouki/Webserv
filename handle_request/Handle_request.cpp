@@ -135,57 +135,59 @@ int Handle_request::recv_request(int fd, Server &server)
 			requests[fd].first.set_header_status(PARSED);
 		}
 		// recv body only in case of POST request else ignore
+		if (requests[fd].first.get_method() == "GET")
+			return Handle_request::get_handle(fd, server);
 		if (requests[fd].first.get_method() == "POST")
-		{
-			// - right location
-			// - is_method_allowed
-			// - fix_path
-			// are already checked on request_first_line()
-
-			std::ofstream upload_file;
-			if (requests[fd].first.get_header_status() == PARSED)
-			{
-				received = received.substr(received.find("\r\n\r\n") + 4);
-				requests[fd].first.set_read_bytes(received.size());
-				requests[fd].first.set_header_status(FULLY_PARSED);
-
-				// if location accept POST and doesn't have directive is concidered an error
-				if (requests[fd].first.get_location().get_upload() == "NULL")
-				{
-					requests[fd].first.set_status_code(501);
-					return FAILED;
-				}
-
-				// open file to upload to
-				if (requests[fd].first.get_path() == requests[fd].first.get_location().get_upload())
-					requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1));
-				else
-					requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1, requests[fd].first.get_path().find_last_of("/")));
-				system(requests[fd].first.get_path_to_upload().c_str());
-			}
-			else
-				requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
-			upload_file.open(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
-
-			// read from socket
-			// writing what is left from first read (header read)
-			upload_file << received;
-			if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
-				return CHUNCKED;
-			if (requests[fd].first.get_read_bytes() == requests[fd].first.get_content_length())
-				return DONE;
-		}
+			return Handle_request::post_handle(fd, received, r);
+		else
+			return Handle_request::delete_handle(fd, server);
 	}
-	return treat_request(fd, server);
 }
-int Handle_request::treat_request(int fd, Server &server)
+int Handle_request::get_handle(int fd, Server &server)
 {
-	if (requests[fd].first.get_method() == "GET")
-		return Handle_request::get_handle(fd, server);
-	else if (requests[fd].first.get_method() == "POST")
-		return Handle_request::post_handle(fd, server);
+	(void)fd;
+	(void)server;
+	return DONE;
+}
+int Handle_request::post_handle(int fd, std::string &received, int r)
+{
+	std::ofstream upload_file;
+	if (requests[fd].first.get_header_status() == PARSED)
+	{
+		received = received.substr(received.find("\r\n\r\n") + 4);
+		requests[fd].first.set_read_bytes(received.size());
+		requests[fd].first.set_header_status(FULLY_PARSED);
+
+		// if location accept POST and doesn't have directive is concidered an error
+		if (requests[fd].first.get_location().get_upload() == "NULL")
+		{
+			requests[fd].first.set_status_code(501);
+			return FAILED;
+		}
+
+		// open file to upload to
+		if (requests[fd].first.get_path() == requests[fd].first.get_location().get_upload())
+			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1));
+		else
+			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1, requests[fd].first.get_path().find_last_of("/")));
+		system(requests[fd].first.get_path_to_upload().c_str());
+	}
 	else
-		return Handle_request::delete_handle(fd, server);
+		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
+	upload_file.open(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
+
+	// read from socket
+	// writing what is left from first read (header read)
+	upload_file << received;
+	if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
+		return CHUNCKED;
+	return DONE;
+}
+int Handle_request::delete_handle(int fd, Server &server)
+{
+	(void)fd;
+	(void)server;
+	return DONE;
 }
 int Handle_request::send_response(int fd)
 {
@@ -210,25 +212,6 @@ int Handle_request::send_response(int fd)
 	send(fd, buffer, strlen(buffer), 0);
 
 	return KEEP_ALIVE;
-}
-
-int Handle_request::get_handle(int fd, Server &server)
-{
-	(void)fd;
-	(void)server;
-	return DONE;
-}
-int Handle_request::post_handle(int fd, Server &server)
-{
-	(void)fd;
-	(void)server;
-	return DONE;
-}
-int Handle_request::delete_handle(int fd, Server &server)
-{
-	(void)fd;
-	(void)server;
-	return DONE;
 }
 
 int Handle_request::request_first_line(int fd, std::string received, Server &server)
