@@ -9,17 +9,20 @@ Request::Request()
 	_path = "NULL";
 	_connection = "NULL";
 	_content_length = 0;
+	_content_type = "";
 	_transfer_encoding = "NULL";
 	_temp_header = "";
 	_status_code = 200;
 	_header_status = RECEIVE;
 	_read_bytes = 0;
+	_path_to_upload = "";
 }
 
 void Request::set_method(std::string method) { this->_method = method; }
 void Request::set_path(std::string path) { this->_path = path; }
 void Request::set_connection(std::string connection) { this->_connection = connection; }
 void Request::set_content_length(std::string content_length) { this->_content_length = atoi(content_length.c_str()); }
+void Request::set_content_type(std::string content_type) { this->_content_type = content_type; }
 void Request::set_transfer_encoding(std::string transfer_encoding) { this->_transfer_encoding = transfer_encoding; }
 void Request::set_temp_header(std::string temp_header) { this->_temp_header = temp_header; }
 void Request::set_location(Location location) { this->_location = location; }
@@ -31,6 +34,7 @@ std::string Request::get_method() const { return _method; }
 std::string Request::get_path() const { return _path; }
 std::string Request::get_connection() const { return _connection; }
 size_t Request::get_content_length() const { return _content_length; }
+std::string Request::get_content_type() const { return _content_type; }
 std::string Request::get_transfer_encoding() const { return _transfer_encoding; }
 std::string Request::get_temp_header() const { return _temp_header; }
 Location Request::get_location() const { return _location; }
@@ -45,11 +49,13 @@ void Request::clear_request()
 	_path = "NULL";
 	_connection = "NULL";
 	_content_length = 0;
+	_content_type = "";
 	_transfer_encoding = "NULL";
 	_temp_header = "";
 	_status_code = 200;
 	_header_status = RECEIVE;
 	_read_bytes = 0;
+	_path_to_upload = "";
 }
 
 //////////////////////////////////////////////////
@@ -62,8 +68,8 @@ Response::Response()
 	_cgi = "";
 	_cgi_path = "";
 	_autoindex = false;
-	_bytes_sent = 0;
 	_content_length = 0;
+	_sent_sofar = 0;
 }
 
 void Response::set_header(std::string header) { this->_header = header; }
@@ -71,15 +77,15 @@ void Response::set_header_sent(bool header_sent) { this->_header_sent = header_s
 void Response::set_cgi(std::string cgi) { this->_cgi = cgi; }
 void Response::set_cgi_path(std::string cgi_path) { this->_cgi_path = cgi_path; }
 void Response::set_autoindex(bool autoindex) { this->_autoindex = autoindex; }
-void Response::set_bytes_sent(unsigned long bytes_sent) { this->_bytes_sent = bytes_sent; }
 void Response::set_content_length(unsigned long content_length) { this->_content_length = content_length; }
+void Response::set_sent_sofar(unsigned long sent_sofar) { this->_sent_sofar = sent_sofar; }
 std::string Response::get_header() const { return _header; }
 bool Response::get_header_sent() const { return _header_sent; }
 std::string Response::get_cgi() const { return _cgi; }
 std::string Response::get_cgi_path() const { return _cgi_path; }
 bool Response::get_autoindex() const { return _autoindex; }
-unsigned long Response::get_bytes_sent() const { return _bytes_sent; }
 unsigned long Response::get_content_length() const { return _content_length; }
+unsigned long Response::get_sent_sofar() const { return _sent_sofar; }
 
 void Response::clear_response()
 {
@@ -88,8 +94,8 @@ void Response::clear_response()
 	_cgi = "";
 	_cgi_path = "";
 	_autoindex = false;
-	_bytes_sent = 0;
 	_content_length = 0;
+	_sent_sofar = 0;
 }
 
 //////////////////////////////////////////////////
@@ -138,7 +144,7 @@ int Handle_request_response::recv_request(int fd, Server &server)
 			}
 		}
 
-		// parse header else parse body
+		// parse header
 		if (requests[fd].first.get_header_status() < PARSED)
 		{
 			int first_line_status = request_first_line(fd, received, server);
@@ -154,6 +160,7 @@ int Handle_request_response::recv_request(int fd, Server &server)
 				requests[fd].first.set_status_code(PAYLOAD_TOO_LARGE);
 				return DONE;
 			}
+			requests[fd].first.set_content_type(find_value("Content-Type:", received));
 			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
 			if (requests[fd].first.get_transfer_encoding() != "NULL" && requests[fd].first.get_transfer_encoding() != "chunked")
 			{
@@ -229,10 +236,7 @@ int Handle_request_response::get_handle(int fd)
 					requests[fd].first.set_status_code(FORBIDDEN);
 			}
 			else
-			{
-				// if index is found check cgi
 				get_handle(fd);
-			}
 		}
 		else
 		{
@@ -247,9 +251,7 @@ int Handle_request_response::get_handle(int fd)
 }
 int Handle_request_response::post_handle(int fd, std::string &received, int r)
 {
-	// to do:
-	/// chunked parsing
-	/// give random name to uploads
+	// !! chunked parsing
 	if (requests[fd].first.get_header_status() == PARSED)
 	{
 		received = received.substr(received.find("\r\n\r\n") + 4);
@@ -259,21 +261,19 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 		// if location accept POST and doesn't have directive is concidered an error
 		if (requests[fd].first.get_location().get_upload() == "NULL")
 		{
-			requests[fd].first.set_status_code(501);
+			requests[fd].first.set_status_code(NOT_IMPLEMENTED);
 			return DONE;
 		}
 
-		// open file to upload to
-		if (requests[fd].first.get_path() == requests[fd].first.get_location().get_upload())
-			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1));
-		else
-			requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_path().substr(1, requests[fd].first.get_path().find_last_of("/")));
+		// create folder to upload to
+		requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_location().get_upload().substr(1));
 		system(requests[fd].first.get_path_to_upload().c_str());
+		requests[fd].first.set_path_to_upload(requests[fd].first.get_location().get_upload().substr(1) + "/" + generate_random_name() + extension_maker(requests[fd].first.get_content_type()));
 	}
 	else
 		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
 
-	std::ofstream upload_file(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
+	std::ofstream upload_file(requests[fd].first.get_path_to_upload(), std::ios::out | std::ios::app);
 	upload_file << received;
 	upload_file.close();
 
@@ -399,6 +399,14 @@ std::vector<std::string> Handle_request_response::split_string(std::string str, 
 	final_vector.push_back(str);
 	return final_vector;
 }
+std::string Handle_request_response::generate_random_name()
+{
+	std::string random_name;
+
+	srand(time(0));
+	random_name = "file_" + to_string(rand());
+	return random_name;
+}
 
 //////////////////////////////////////////////////
 // Response
@@ -420,27 +428,29 @@ int Handle_request_response::send_response(int fd)
 			requests[fd].second.set_header_sent(HEADER_SENT);
 	}
 	// send body in case of GET request
+	// !! if autoindex is on, a directory is requested
 	if (requests[fd].first.get_method() == "GET")
 	{
 		// send body code
 		std::ifstream requested_file(requests[fd].first.get_path());
 		char buffer[BUFFER_SIZE];
-		size_t read = 0;
-		size_t sent_so_far = 0;
+		size_t read;
+		size_t bytes_sent = 0;
 
-		if (requests[fd].second.get_content_length() - requests[fd].second.get_bytes_sent())
+		if (requests[fd].second.get_content_length() - requests[fd].second.get_sent_sofar())
 		{
-			requested_file.seekg(requests[fd].second.get_bytes_sent());
+			requested_file.seekg(requests[fd].second.get_sent_sofar());
 			requested_file.read(buffer, BUFFER_SIZE - 1);
 			read = requested_file.gcount();
 			buffer[read] = '\0';
 
 			do
 			{
-				size_t sent = send(fd, buffer + sent_so_far, read, 0);
-				sent_so_far += sent;
-			} while (sent_so_far < read);
-			requests[fd].second.set_bytes_sent(requests[fd].second.get_bytes_sent() + sent_so_far);
+				size_t sent = send(fd, buffer + bytes_sent, read, 0);
+				bytes_sent += sent;
+			} while (bytes_sent < read);
+			requests[fd].second.set_sent_sofar(requests[fd].second.get_sent_sofar() + read);
+			requested_file.close();
 			return CHUNCKED;
 		}
 		requests[fd].first.clear_request();
@@ -573,6 +583,44 @@ std::string Handle_request_response::content_type_maker(std::string ext)
 	else if (ext == "mp4")
 		return base + "video/mp4\r\n";
 	return base + "application/octet-stream\r\n";
+}
+std::string Handle_request_response::extension_maker(std::string type)
+{
+	if (type == "text/html")
+		return ".html";
+	else if (type == "text/css")
+		return ".css";
+	else if (type == "text/xml")
+		return ".xml";
+	else if (type == "image/gif")
+		return ".gif";
+	else if (type == "image/jpeg")
+		return ".jpeg";
+	else if (type == "application/javascript")
+		return ".js";
+	else if (type == "text/plain")
+		return ".txt";
+	else if (type == "image/png")
+		return ".png";
+	else if (type == "image/svg+xml")
+		return ".svg";
+	else if (type == "image/x-icon")
+		return ".ico";
+	else if (type == "application/json")
+		return ".json";
+	else if (type == "application/pdf")
+		return ".pdf";
+	else if (type == "text/csv")
+		return ".csv";
+	else if (type == "application/vnd.ms-powerpoint")
+		return ".ppt";
+	else if (type == "application/zip")
+		return ".zip";
+	else if (type == "audio/mpeg")
+		return ".mp3";
+	else if (type == "video/mp4")
+		return ".mp4";
+	return "";
 }
 std::string Handle_request_response::ext_from_path(std::string path)
 {

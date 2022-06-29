@@ -89,6 +89,7 @@ private:
 	std::string _path;
 	std::string _connection;
 	size_t _content_length;
+	std::string _content_type;
 	std::string _transfer_encoding;
 	std::string _temp_header;
 	Location _location;
@@ -104,6 +105,7 @@ public:
 	void set_path(std::string);
 	void set_connection(std::string);
 	void set_content_length(std::string);
+	void set_content_type(std::string);
 	void set_transfer_encoding(std::string);
 	void set_temp_header(std::string);
 	void set_location(Location);
@@ -115,6 +117,7 @@ public:
 	std::string get_path() const;
 	std::string get_connection() const;
 	size_t get_content_length() const;
+	std::string get_content_type() const;
 	std::string get_transfer_encoding() const;
 	std::string get_temp_header() const;
 	Location get_location() const;
@@ -137,8 +140,8 @@ private:
 	std::string _cgi;
 	std::string _cgi_path;
 	bool _autoindex;
-	unsigned long _bytes_sent;
 	unsigned long _content_length;
+	unsigned long _sent_sofar;
 
 public:
 	Response();
@@ -148,15 +151,15 @@ public:
 	void set_cgi(std::string);
 	void set_cgi_path(std::string);
 	void set_autoindex(bool);
-	void set_bytes_sent(unsigned long);
 	void set_content_length(unsigned long);
+	void set_sent_sofar(unsigned long);
 	std::string get_header() const;
 	bool get_header_sent() const;
 	std::string get_cgi() const;
 	std::string get_cgi_path() const;
 	bool get_autoindex() const;
-	unsigned long get_bytes_sent() const;
 	unsigned long get_content_length() const;
+	unsigned long get_sent_sofar() const;
 
 	void clear_response();
 };
@@ -185,10 +188,12 @@ public:
 	bool is_method_allowed(Location, std::string);
 	void fix_path(Request &);
 	std::vector<std::string> split_string(std::string, std::string);
+	std::string generate_random_name();
 
 	std::string header_maker(short);
 	std::string status_line_maker(short);
 	std::string content_type_maker(std::string);
+	std::string extension_maker(std::string);
 	std::string ext_from_path(std::string);
 	std::string to_string(int);
 };
