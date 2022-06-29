@@ -10,8 +10,10 @@ Request::Request()
 	_connection = "NULL";
 	_content_length = 0;
 	_transfer_encoding = "NULL";
-	_header_status = RECEIVE;
+	_temp_header = "";
 	_status_code = 200;
+	_header_status = RECEIVE;
+	_read_bytes = 0;
 }
 
 void Request::set_method(std::string method) { this->_method = method; }
@@ -23,7 +25,6 @@ void Request::set_temp_header(std::string temp_header) { this->_temp_header = te
 void Request::set_location(Location location) { this->_location = location; }
 void Request::set_status_code(short status_code) { this->_status_code = status_code; }
 void Request::set_header_status(short header_status) { this->_header_status = header_status; }
-void Request::set_body_status(short body_status) { this->_body_status = body_status; }
 void Request::set_read_bytes(size_t read_bytes) { this->_read_bytes = read_bytes; }
 void Request::set_path_to_upload(std::string path_to_upload) { this->_path_to_upload = path_to_upload; }
 std::string Request::get_method() const { return _method; }
@@ -35,9 +36,21 @@ std::string Request::get_temp_header() const { return _temp_header; }
 Location Request::get_location() const { return _location; }
 short Request::get_status_code() const { return _status_code; }
 short Request::get_header_status() const { return _header_status; }
-short Request::get_body_status() const { return _body_status; }
 size_t Request::get_read_bytes() const { return _read_bytes; }
 std::string Request::get_path_to_upload() const { return _path_to_upload; }
+
+void Request::clear_request()
+{
+	_method = "NULL";
+	_path = "NULL";
+	_connection = "NULL";
+	_content_length = 0;
+	_transfer_encoding = "NULL";
+	_temp_header = "";
+	_status_code = 200;
+	_header_status = RECEIVE;
+	_read_bytes = 0;
+}
 
 //////////////////////////////////////////////////
 // Response class
@@ -46,9 +59,11 @@ Response::Response()
 {
 	_header = "";
 	_header_sent = HEADER_NOT_SENT;
+	_cgi = "";
+	_cgi_path = "";
 	_autoindex = false;
 	_bytes_sent = 0;
-	_content_length = 4;
+	_content_length = 0;
 }
 
 void Response::set_header(std::string header) { this->_header = header; }
@@ -68,10 +83,13 @@ unsigned long Response::get_content_length() const { return _content_length; }
 
 void Response::clear_response()
 {
-	_bytes_sent = 0;
 	_header = "";
 	_header_sent = HEADER_NOT_SENT;
-	_content_length = 4;
+	_cgi = "";
+	_cgi_path = "";
+	_autoindex = false;
+	_bytes_sent = 0;
+	_content_length = 0;
 }
 
 //////////////////////////////////////////////////
@@ -178,6 +196,8 @@ int Handle_request_response::get_handle(int fd)
 			requests[fd].second.set_cgi_path(*it);
 			// running CGI code here
 		}
+		else
+			requests[fd].second.set_content_length(info.st_size);
 		return DONE;
 	}
 	else // if (S_ISDIR(info.st_mode))
@@ -229,8 +249,7 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 {
 	// to do:
 	/// chunked parsing
-	/// in case upload file name isn't given
-	std::ofstream upload_file;
+	/// give random name to uploads
 	if (requests[fd].first.get_header_status() == PARSED)
 	{
 		received = received.substr(received.find("\r\n\r\n") + 4);
@@ -253,9 +272,11 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 	}
 	else
 		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
-	upload_file.open(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
 
+	std::ofstream upload_file(requests[fd].first.get_path().substr(1).c_str(), std::ios::out | std::ios::app);
 	upload_file << received;
+	upload_file.close();
+
 	if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
 		return CHUNCKED;
 	return DONE;
@@ -402,14 +423,35 @@ int Handle_request_response::send_response(int fd)
 	if (requests[fd].first.get_method() == "GET")
 	{
 		// send body code
-		send(fd, "succ", 4, 0);
+		std::ifstream requested_file(requests[fd].first.get_path());
+		char buffer[BUFFER_SIZE];
+		size_t read = 0;
+		size_t sent_so_far = 0;
+
+		if (requests[fd].second.get_content_length() - requests[fd].second.get_bytes_sent())
+		{
+			requested_file.seekg(requests[fd].second.get_bytes_sent());
+			requested_file.read(buffer, BUFFER_SIZE - 1);
+			read = requested_file.gcount();
+			buffer[read] = '\0';
+
+			do
+			{
+				size_t sent = send(fd, buffer + sent_so_far, read, 0);
+				sent_so_far += sent;
+			} while (sent_so_far < read);
+			requests[fd].second.set_bytes_sent(requests[fd].second.get_bytes_sent() + sent_so_far);
+			return CHUNCKED;
+		}
+		requests[fd].first.clear_request();
 		requests[fd].second.clear_response();
-		return KILL_CONNECTION;
+		return KEEP_ALIVE;
 	}
 	else
 	{
+		requests[fd].first.clear_request();
 		requests[fd].second.clear_response();
-		return KILL_CONNECTION;
+		return KEEP_ALIVE;
 	}
 }
 

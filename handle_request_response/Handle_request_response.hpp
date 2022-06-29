@@ -66,7 +66,8 @@
 // Response
 #define HEADER_NOT_SENT 0
 #define HEADER_SENT 1
-#define KILL_CONNECTION 0
+#define KILL_CONNECTION -1
+#define CHUNKED 0
 #define KEEP_ALIVE 1
 
 #include "../parser/Parser.hpp"
@@ -93,7 +94,6 @@ private:
 	Location _location;
 	short _status_code;
 	short _header_status;
-	short _body_status;
 	size_t _read_bytes;
 	std::string _path_to_upload;
 
@@ -109,7 +109,6 @@ public:
 	void set_location(Location);
 	void set_status_code(short);
 	void set_header_status(short);
-	void set_body_status(short);
 	void set_path_to_upload(std::string);
 	void set_read_bytes(size_t);
 	std::string get_method() const;
@@ -121,9 +120,10 @@ public:
 	Location get_location() const;
 	short get_header_status() const;
 	short get_status_code() const;
-	short get_body_status() const;
 	size_t get_read_bytes() const;
 	std::string get_path_to_upload() const;
+
+	void clear_request();
 };
 
 //////////////////////////////////////////////////
