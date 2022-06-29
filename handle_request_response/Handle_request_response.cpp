@@ -53,11 +53,15 @@ Response::Response()
 
 void Response::set_header(std::string header) { this->_header = header; }
 void Response::set_header_sent(bool header_sent) { this->_header_sent = header_sent; }
+void Response::set_cgi(std::string cgi) { this->_cgi = cgi; }
+void Response::set_cgi_path(std::string cgi_path) { this->_cgi_path = cgi_path; }
 void Response::set_autoindex(bool autoindex) { this->_autoindex = autoindex; }
 void Response::set_bytes_sent(unsigned long bytes_sent) { this->_bytes_sent = bytes_sent; }
 void Response::set_content_length(unsigned long content_length) { this->_content_length = content_length; }
 std::string Response::get_header() const { return _header; }
 bool Response::get_header_sent() const { return _header_sent; }
+std::string Response::get_cgi() const { return _cgi; }
+std::string Response::get_cgi_path() const { return _cgi_path; }
 bool Response::get_autoindex() const { return _autoindex; }
 unsigned long Response::get_bytes_sent() const { return _bytes_sent; }
 unsigned long Response::get_content_length() const { return _content_length; }
@@ -143,74 +147,83 @@ int Handle_request_response::recv_request(int fd, Server &server)
 		}
 
 		if (requests[fd].first.get_method() == "GET")
-			return Handle_request_response::get_handle(fd, server);
+			return Handle_request_response::get_handle(fd);
 		if (requests[fd].first.get_method() == "POST")
 			return Handle_request_response::post_handle(fd, received, r);
 		else
-			return Handle_request_response::delete_handle(fd, server);
+			return Handle_request_response::delete_handle(fd);
 	}
 }
-int Handle_request_response::get_handle(int fd, Server &server)
+int Handle_request_response::get_handle(int fd)
 {
-	(void)fd;
-	(void)server;
-	return DONE;
-	// struct stat info;
-	// std::string path = requests[fd].first.get_path();
+	struct stat info;
+	std::string path = requests[fd].first.get_path();
+	std::string ext = ext_from_path(path);
 
-	// if (stat(path.c_str(), &info) != 0)
-	// {
-	// 	// request resource not found
-	// 	requests[fd].first.set_status_code(NOT_FOUND);
-	// 	return DONE;
-	// }
-	// else if (S_ISDIR(info.st_mode))
-	// {
-	// 	// is directory
-	// 	std::vector<std::string> index = requests[fd].first.get_location().get_index();
-	// 	if (index.size())
-	// 	{
-	// 		// if there is an index file
-	// 		std::vector<std::string>::iterator it = index.begin();
-	// 		std::string index_path;
-	// 		struct stat index_info;
-	// 		while (it != index.end())
-	// 		{
-	// 			index_path = path + *it;
-	// 			if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
-	// 			{
-	// 				requests[fd].first.set_path(index_path);
-	// 				break;
-	// 			}
-	// 			it++;
-	// 		}
-	// 		if (requests[fd].first.get_path() != index_path)
-	// 			requests[fd].first.set_status_code(NOT_FOUND);
-	// 		else
-	// 		{
-	// 			std::string index_ext = ext_from_path(requests[fd].first.get_path());
-	// 			if (index_ext != "") {}
-	// 				// find(requests[fd].first.get_location().get_cgi());
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		// if autoindex is on
-	// 		if (requests[fd].first.get_location().get_autoindex() == "on")
-	// 			requests[fd].second.set_autoindex(true);
-	// 		else
-	// 			requests[fd].first.set_status_code(FORBIDDEN);
-	// 	}
-	// 	return DONE;
-	// }
-	// else if (S_ISREG(info.st_mode))
-	// {
-	// 	// is registery
-	// 	if (requests[fd].first.get_location().get_cgi() != "NULL")
-	// 	{
-	// 		// CGI code here
-	// 	}
-	// }
+	if (stat(path.c_str(), &info) != 0)
+	{
+		// request resource not found
+		requests[fd].first.set_status_code(NOT_FOUND);
+		return DONE;
+	}
+	else if (S_ISREG(info.st_mode))
+	{
+		// is registery
+		std::vector<std::string> cgi = requests[fd].first.get_location().get_cgi();
+		std::vector<std::string>::iterator it;
+
+		if ((it = find(cgi.begin(), cgi.end(), ext)) != cgi.end())
+		{
+			requests[fd].second.set_cgi(*it++);
+			requests[fd].second.set_cgi_path(*it);
+			// running CGI code here
+		}
+		return DONE;
+	}
+	else // if (S_ISDIR(info.st_mode))
+	{
+		// is directory
+		std::vector<std::string> index = requests[fd].first.get_location().get_index();
+		if (index.size())
+		{
+			// if there is an index file
+			std::vector<std::string>::iterator it = index.begin();
+			std::string index_path;
+			struct stat index_info;
+			while (it != index.end())
+			{
+				index_path = path + *it;
+				if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
+				{
+					requests[fd].first.set_path(index_path);
+					break;
+				}
+				it++;
+			}
+			if (requests[fd].first.get_path() != index_path)
+			{
+				// if no index is found check autoindex
+				if (requests[fd].first.get_location().get_autoindex() == "on")
+					requests[fd].second.set_autoindex(true);
+				else
+					requests[fd].first.set_status_code(FORBIDDEN);
+			}
+			else
+			{
+				// if index is found check cgi
+				get_handle(fd);
+			}
+		}
+		else
+		{
+			// if autoindex is on
+			if (requests[fd].first.get_location().get_autoindex() == "on")
+				requests[fd].second.set_autoindex(true);
+			else
+				requests[fd].first.set_status_code(FORBIDDEN);
+		}
+		return DONE;
+	}
 }
 int Handle_request_response::post_handle(int fd, std::string &received, int r)
 {
@@ -247,10 +260,9 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 		return CHUNCKED;
 	return DONE;
 }
-int Handle_request_response::delete_handle(int fd, Server &server)
+int Handle_request_response::delete_handle(int fd)
 {
 	(void)fd;
-	(void)server;
 	return DONE;
 }
 
@@ -344,7 +356,7 @@ bool Handle_request_response::is_method_allowed(Location location, std::string m
 void Handle_request_response::fix_path(Request &request)
 {
 	Location location = request.get_location();
-	std::string uri = request.get_method() == "POST" ? location.get_upload() : location.get_root();
+	std::string uri = request.get_method() == "POST" ? location.get_upload().substr(1) : location.get_root().substr(1);
 	size_t route_size = location.get_uri().size();
 
 	// uri.size() == 1 => "/"
@@ -484,39 +496,39 @@ std::string Handle_request_response::content_type_maker(std::string ext)
 {
 	std::string base("Content-Type: ");
 
-	if (ext == ".html" || ext == ".htm")
+	if (ext == "html" || ext == "htm")
 		return base + "text/html\r\n";
-	else if (ext == ".css")
+	else if (ext == "css")
 		return base + "text/css\r\n";
-	else if (ext == ".xml")
+	else if (ext == "xml")
 		return base + "text/xml\r\n";
-	else if (ext == ".gif")
+	else if (ext == "gif")
 		return base + "image/gif\r\n";
-	else if (ext == ".jpeg" || ext == ".jpg")
+	else if (ext == "jpeg" || ext == "jpg")
 		return base + "image/jpeg\r\n";
-	else if (ext == ".js")
+	else if (ext == "js")
 		return base + "application/javascript\r\n";
-	else if (ext == ".txt")
+	else if (ext == "txt")
 		return base + "text/plain\r\n";
-	else if (ext == ".png")
+	else if (ext == "png")
 		return base + "image/png\r\n";
-	else if (ext == ".svg" || ext == ".svgz")
+	else if (ext == "svg" || ext == "svgz")
 		return base + "image/svg+xml\r\n";
-	else if (ext == ".ico")
+	else if (ext == "ico")
 		return base + "image/x-icon\r\n";
-	else if (ext == ".json")
+	else if (ext == "json")
 		return base + "application/json\r\n";
-	else if (ext == ".pdf")
+	else if (ext == "pdf")
 		return base + "application/pdf\r\n";
-	else if (ext == ".csv")
+	else if (ext == "csv")
 		return base + "text/csv\r\n";
-	else if (ext == ".ppt")
+	else if (ext == "ppt")
 		return base + "application/vnd.ms-powerpoint\r\n";
-	else if (ext == ".zip")
+	else if (ext == "zip")
 		return base + "application/zip\r\n";
-	else if (ext == ".mp3")
+	else if (ext == "mp3")
 		return base + "audio/mpeg\r\n";
-	else if (ext == ".mp4")
+	else if (ext == "mp4")
 		return base + "video/mp4\r\n";
 	return base + "application/octet-stream\r\n";
 }
@@ -524,7 +536,7 @@ std::string Handle_request_response::ext_from_path(std::string path)
 {
 	size_t dot_pos = path.find_last_of(".");
 	if (dot_pos != std::string::npos)
-		return path.substr(dot_pos);
+		return path.substr(++dot_pos);
 	return "";
 }
 std::string Handle_request_response::to_string(int i)

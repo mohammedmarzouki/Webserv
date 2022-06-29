@@ -134,6 +134,8 @@ class Response
 private:
 	std::string _header;
 	bool _header_sent;
+	std::string _cgi;
+	std::string _cgi_path;
 	bool _autoindex;
 	unsigned long _bytes_sent;
 	unsigned long _content_length;
@@ -143,11 +145,15 @@ public:
 
 	void set_header(std::string);
 	void set_header_sent(bool);
+	void set_cgi(std::string);
+	void set_cgi_path(std::string);
 	void set_autoindex(bool);
 	void set_bytes_sent(unsigned long);
 	void set_content_length(unsigned long);
 	std::string get_header() const;
 	bool get_header_sent() const;
+	std::string get_cgi() const;
+	std::string get_cgi_path() const;
 	bool get_autoindex() const;
 	unsigned long get_bytes_sent() const;
 	unsigned long get_content_length() const;
@@ -167,9 +173,9 @@ public:
 	Handle_request_response();
 
 	int recv_request(int, Server &);
-	int get_handle(int, Server &);
+	int get_handle(int);
 	int post_handle(int, std::string &, int);
-	int delete_handle(int, Server &);
+	int delete_handle(int);
 	int send_response(int);
 
 	int request_first_line(int, std::string, Server &);
