@@ -181,12 +181,12 @@ void Parser::location_directives(Location &location)
 		}
 		eat(";");
 	}
-	else if (_lookahead.get_type() == "cgi_pass")
+	else if (_lookahead.get_type() == "cgi")
 	{
-		eat("cgi_pass");
+		eat("cgi");
 		if (_lookahead.get_type() == "string")
 		{
-			location.set_cgi_pass(_lookahead.get_value());
+			location.set_cgi(_lookahead.get_value());
 			eat(_lookahead.get_type());
 		}
 		eat(";");

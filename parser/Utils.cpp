@@ -68,8 +68,8 @@ std::string Regex::match(std::string &regex, std::string &string)
 		return match_upload(string);
 	else if (regex == "autoindex")
 		return match_autoindex(string);
-	else if (regex == "cgi_pass")
-		return match_cgi_pass(string);
+	else if (regex == "cgi")
+		return match_cgi(string);
 
 	else if (regex == "ipv4")
 		return match_ipv4(string);
@@ -173,9 +173,9 @@ std::string Regex::match_autoindex(std::string &string)
 {
 	return match_keyword(string, "autoindex", 9);
 }
-std::string Regex::match_cgi_pass(std::string &string)
+std::string Regex::match_cgi(std::string &string)
 {
-	return match_keyword(string, "cgi_pass", 8);
+	return match_keyword(string, "cgi", 3);
 }
 
 std::string Regex::match_ipv4(std::string &string)
@@ -254,7 +254,6 @@ Location::Location()
 	this->_uri = "NULL";
 	this->_root = "NULL";
 	this->_autoindex = "off";
-	this->_cgi_pass = "NULL";
 	this->_upload = "NULL";
 }
 Location::Location(const Location &src)
@@ -272,7 +271,7 @@ Location &Location::operator=(const Location &src)
 	this->_return = src._return;
 	this->_upload = src._upload;
 	this->_autoindex = src._autoindex;
-	this->_cgi_pass = src._cgi_pass;
+	this->_cgi = src._cgi;
 	return *this;
 }
 
@@ -283,7 +282,7 @@ void Location::add_allow_methods(std::string allow_methods) { _allow_methods.pus
 void Location::add_return(std::string redirect) { _return.push_back(redirect); }
 void Location::set_upload(std::string upload) { _upload = upload; }
 void Location::set_autoindex(std::string autoindex) { _autoindex = autoindex; }
-void Location::set_cgi_pass(std::string cgi_pass) { _cgi_pass = cgi_pass; }
+void Location::set_cgi(std::string cgi) { _cgi = cgi; }
 
 std::string Location::get_uri() const { return _uri; }
 std::string Location::get_root() const { return _root; }
@@ -292,7 +291,7 @@ std::vector<std::string> Location::get_allow_methods() const { return _allow_met
 std::vector<std::string> Location::get_return() const { return _return; }
 std::string Location::get_upload() const { return _upload; }
 std::string Location::get_autoindex() const { return _autoindex; }
-std::string Location::get_cgi_pass() const { return _cgi_pass; }
+std::string Location::get_cgi() const { return _cgi; }
 
 //////////////////////////////////////////////////
 // Server class
@@ -384,7 +383,7 @@ void print_servers(std::vector<Server> &servers)
 			print_vector(it2->get_return());
 			std::cout << "	upload:		" << it2->get_upload() << std::endl;
 			std::cout << "	autoindex:		" << it2->get_autoindex() << std::endl;
-			std::cout << "	cgi_pass:		" << it2->get_cgi_pass() << std::endl;
+			std::cout << "	cgi:		" << it2->get_cgi() << std::endl;
 
 			j++;
 			it2++;

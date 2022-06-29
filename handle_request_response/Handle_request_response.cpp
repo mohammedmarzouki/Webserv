@@ -44,19 +44,22 @@ std::string Request::get_path_to_upload() const { return _path_to_upload; }
 //////////////////////////////////////////////////
 Response::Response()
 {
-	_bytes_sent = 0;
 	_header = "";
 	_header_sent = HEADER_NOT_SENT;
+	_autoindex = false;
+	_bytes_sent = 0;
 	_content_length = 4;
 }
 
-void Response::set_bytes_sent(unsigned long bytes_sent) { this->_bytes_sent = bytes_sent; }
 void Response::set_header(std::string header) { this->_header = header; }
 void Response::set_header_sent(bool header_sent) { this->_header_sent = header_sent; }
+void Response::set_autoindex(bool autoindex) { this->_autoindex = autoindex; }
+void Response::set_bytes_sent(unsigned long bytes_sent) { this->_bytes_sent = bytes_sent; }
 void Response::set_content_length(unsigned long content_length) { this->_content_length = content_length; }
-unsigned long Response::get_bytes_sent() const { return _bytes_sent; }
 std::string Response::get_header() const { return _header; }
 bool Response::get_header_sent() const { return _header_sent; }
+bool Response::get_autoindex() const { return _autoindex; }
+unsigned long Response::get_bytes_sent() const { return _bytes_sent; }
 unsigned long Response::get_content_length() const { return _content_length; }
 
 void Response::clear_response()
@@ -152,6 +155,62 @@ int Handle_request_response::get_handle(int fd, Server &server)
 	(void)fd;
 	(void)server;
 	return DONE;
+	// struct stat info;
+	// std::string path = requests[fd].first.get_path();
+
+	// if (stat(path.c_str(), &info) != 0)
+	// {
+	// 	// request resource not found
+	// 	requests[fd].first.set_status_code(NOT_FOUND);
+	// 	return DONE;
+	// }
+	// else if (S_ISDIR(info.st_mode))
+	// {
+	// 	// is directory
+	// 	std::vector<std::string> index = requests[fd].first.get_location().get_index();
+	// 	if (index.size())
+	// 	{
+	// 		// if there is an index file
+	// 		std::vector<std::string>::iterator it = index.begin();
+	// 		std::string index_path;
+	// 		struct stat index_info;
+	// 		while (it != index.end())
+	// 		{
+	// 			index_path = path + *it;
+	// 			if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
+	// 			{
+	// 				requests[fd].first.set_path(index_path);
+	// 				break;
+	// 			}
+	// 			it++;
+	// 		}
+	// 		if (requests[fd].first.get_path() != index_path)
+	// 			requests[fd].first.set_status_code(NOT_FOUND);
+	// 		else
+	// 		{
+	// 			std::string index_ext = ext_from_path(requests[fd].first.get_path());
+	// 			if (index_ext != "") {}
+	// 				// find(requests[fd].first.get_location().get_cgi());
+	// 		}
+	// 	}
+	// 	else
+	// 	{
+	// 		// if autoindex is on
+	// 		if (requests[fd].first.get_location().get_autoindex() == "on")
+	// 			requests[fd].second.set_autoindex(true);
+	// 		else
+	// 			requests[fd].first.set_status_code(FORBIDDEN);
+	// 	}
+	// 	return DONE;
+	// }
+	// else if (S_ISREG(info.st_mode))
+	// {
+	// 	// is registery
+	// 	if (requests[fd].first.get_location().get_cgi() != "NULL")
+	// 	{
+	// 		// CGI code here
+	// 	}
+	// }
 }
 int Handle_request_response::post_handle(int fd, std::string &received, int r)
 {

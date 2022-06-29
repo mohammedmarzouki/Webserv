@@ -59,7 +59,7 @@ public:
 	std::string match_return(std::string &);
 	std::string match_upload(std::string &);
 	std::string match_autoindex(std::string &);
-	std::string match_cgi_pass(std::string &);
+	std::string match_cgi(std::string &);
 
 	std::string match_ipv4(std::string &);
 	std::string match_uri(std::string &);
@@ -80,7 +80,7 @@ private:
 	std::vector<std::string> _return;
 	std::string _upload;
 	std::string _autoindex;
-	std::string _cgi_pass;
+	std::string _cgi;
 
 public:
 	Location();
@@ -96,7 +96,7 @@ public:
 	void add_return(std::string);
 	void set_upload(std::string);
 	void set_autoindex(std::string);
-	void set_cgi_pass(std::string);
+	void set_cgi(std::string);
 	std::string get_uri() const;
 	std::string get_root() const;
 	std::vector<std::string> get_index() const;
@@ -104,7 +104,7 @@ public:
 	std::vector<std::string> get_return() const;
 	std::string get_upload() const;
 	std::string get_autoindex() const;
-	std::string get_cgi_pass() const;
+	std::string get_cgi() const;
 };
 
 //////////////////////////////////////////////////

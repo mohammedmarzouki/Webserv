@@ -73,6 +73,8 @@
 #include <sstream>
 #include <map>
 #include <sys/socket.h> // socket(2), accept(2), listen(2), send(2), recv(2), bind(2), connect(2), inet_addr(3), setsockopt(2), getsockname(2)
+#include <sys/stat.h>	// stat(2)
+#include <sys/types.h>
 
 #define BUFFER_SIZE 1025
 
@@ -132,6 +134,7 @@ class Response
 private:
 	std::string _header;
 	bool _header_sent;
+	bool _autoindex;
 	unsigned long _bytes_sent;
 	unsigned long _content_length;
 
@@ -140,10 +143,12 @@ public:
 
 	void set_header(std::string);
 	void set_header_sent(bool);
+	void set_autoindex(bool);
 	void set_bytes_sent(unsigned long);
 	void set_content_length(unsigned long);
 	std::string get_header() const;
 	bool get_header_sent() const;
+	bool get_autoindex() const;
 	unsigned long get_bytes_sent() const;
 	unsigned long get_content_length() const;
 

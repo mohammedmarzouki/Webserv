@@ -31,7 +31,7 @@ void Tokenizer::fill_specs()
 	_specs.push_back("redirect");
 	_specs.push_back("upload");
 	_specs.push_back("autoindex");
-	_specs.push_back("cgi_pass");
+	_specs.push_back("cgi");
 
 	_specs.push_back("ipv4");
 	_specs.push_back("uri");
