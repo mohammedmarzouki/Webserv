@@ -280,18 +280,18 @@ void Location::set_root(std::string root) { _root = root; }
 void Location::add_index(std::string index) { _index.push_back(index); }
 void Location::add_allow_methods(std::string allow_methods) { _allow_methods.push_back(allow_methods); }
 void Location::add_return(std::string redirect) { _return.push_back(redirect); }
+void Location::add_cgi(std::string cgi) { _cgi.push_back(cgi); }
 void Location::set_upload(std::string upload) { _upload = upload; }
 void Location::set_autoindex(std::string autoindex) { _autoindex = autoindex; }
-void Location::set_cgi(std::string cgi) { _cgi = cgi; }
 
 std::string Location::get_uri() const { return _uri; }
 std::string Location::get_root() const { return _root; }
 std::vector<std::string> Location::get_index() const { return _index; }
 std::vector<std::string> Location::get_allow_methods() const { return _allow_methods; }
 std::vector<std::string> Location::get_return() const { return _return; }
+std::vector<std::string> Location::get_cgi() const { return _cgi; }
 std::string Location::get_upload() const { return _upload; }
 std::string Location::get_autoindex() const { return _autoindex; }
-std::string Location::get_cgi() const { return _cgi; }
 
 //////////////////////////////////////////////////
 // Server class
@@ -383,7 +383,8 @@ void print_servers(std::vector<Server> &servers)
 			print_vector(it2->get_return());
 			std::cout << "	upload:		" << it2->get_upload() << std::endl;
 			std::cout << "	autoindex:		" << it2->get_autoindex() << std::endl;
-			std::cout << "	cgi:		" << it2->get_cgi() << std::endl;
+			std::cout << "	cgi:		";
+			print_vector(it2->get_cgi());
 
 			j++;
 			it2++;

@@ -77,11 +77,11 @@ void Parser::server_directives(Server &server)
 		{
 			server.add_error_page(_lookahead.get_value());
 			eat(_lookahead.get_type());
-		}
-		if (_lookahead.get_type() == "uri")
-		{
-			server.add_error_page(_lookahead.get_value());
-			eat(_lookahead.get_type());
+			if (_lookahead.get_type() == "uri")
+			{
+				server.add_error_page(_lookahead.get_value());
+				eat(_lookahead.get_type());
+			}
 		}
 		eat(";");
 	}
@@ -154,10 +154,15 @@ void Parser::location_directives(Location &location)
 	else if (_lookahead.get_type() == "redirect")
 	{
 		eat("redirect");
-		while (_lookahead.get_value() != ";" && (_lookahead.get_type() == "number" || _lookahead.get_type() == "string"))
+		if (_lookahead.get_type() == "number")
 		{
 			location.add_return(_lookahead.get_value());
 			eat(_lookahead.get_type());
+			if (_lookahead.get_type() == "string")
+			{
+				location.add_return(_lookahead.get_value());
+				eat(_lookahead.get_type());
+			}
 		}
 		eat(";");
 	}
@@ -186,8 +191,13 @@ void Parser::location_directives(Location &location)
 		eat("cgi");
 		if (_lookahead.get_type() == "string")
 		{
-			location.set_cgi(_lookahead.get_value());
+			location.add_cgi(_lookahead.get_value());
 			eat(_lookahead.get_type());
+			if (_lookahead.get_type() == "uri")
+			{
+				location.add_cgi(_lookahead.get_value());
+				eat(_lookahead.get_type());
+			}
 		}
 		eat(";");
 	}

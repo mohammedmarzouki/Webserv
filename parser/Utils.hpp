@@ -78,9 +78,9 @@ private:
 	std::vector<std::string> _index;
 	std::vector<std::string> _allow_methods;
 	std::vector<std::string> _return;
+	std::vector<std::string> _cgi;
 	std::string _upload;
 	std::string _autoindex;
-	std::string _cgi;
 
 public:
 	Location();
@@ -94,17 +94,17 @@ public:
 	void add_index(std::string);
 	void add_allow_methods(std::string);
 	void add_return(std::string);
+	void add_cgi(std::string);
 	void set_upload(std::string);
 	void set_autoindex(std::string);
-	void set_cgi(std::string);
 	std::string get_uri() const;
 	std::string get_root() const;
 	std::vector<std::string> get_index() const;
 	std::vector<std::string> get_allow_methods() const;
 	std::vector<std::string> get_return() const;
+	std::vector<std::string> get_cgi() const;
 	std::string get_upload() const;
 	std::string get_autoindex() const;
-	std::string get_cgi() const;
 };
 
 //////////////////////////////////////////////////
