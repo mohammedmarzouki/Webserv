@@ -75,6 +75,7 @@
 #include <map>
 #include <sys/socket.h> // socket(2), accept(2), listen(2), send(2), recv(2), bind(2), connect(2), inet_addr(3), setsockopt(2), getsockname(2)
 #include <sys/stat.h>	// stat(2)
+#include <dirent.h>
 #include <sys/types.h>
 
 #define BUFFER_SIZE 1025
@@ -87,6 +88,8 @@ class Request
 private:
 	std::string _method;
 	std::string _path;
+	std::string _host;
+	std::string _port;
 	std::string _connection;
 	size_t _content_length;
 	std::string _content_type;
@@ -103,6 +106,8 @@ public:
 
 	void set_method(std::string);
 	void set_path(std::string);
+	void set_host(std::string);
+	void set_port(std::string);
 	void set_connection(std::string);
 	void set_content_length(std::string);
 	void set_content_type(std::string);
@@ -115,6 +120,8 @@ public:
 	void set_read_bytes(size_t);
 	std::string get_method() const;
 	std::string get_path() const;
+	std::string get_host() const;
+	std::string get_port() const;
 	std::string get_connection() const;
 	size_t get_content_length() const;
 	std::string get_content_type() const;
@@ -179,7 +186,6 @@ public:
 	int get_handle(int);
 	int post_handle(int, std::string &, int);
 	int delete_handle(int);
-	int send_response(int);
 
 	int request_first_line(int, std::string, Server &);
 	std::string find_value(std::string, std::string);
@@ -190,12 +196,15 @@ public:
 	std::vector<std::string> split_string(std::string, std::string);
 	std::string generate_random_name();
 
+	int send_response(int);
 	std::string header_maker(short);
 	std::string status_line_maker(short);
 	std::string content_type_maker(std::string);
 	std::string extension_maker(std::string);
 	std::string ext_from_path(std::string);
 	std::string to_string(int);
+	std::string autoindex_maker(int);
+	void send_string(int, std::string);
 };
 
 #endif // HANDLE_REQUEST_RESPONSE_HPP

@@ -20,6 +20,8 @@ Request::Request()
 
 void Request::set_method(std::string method) { this->_method = method; }
 void Request::set_path(std::string path) { this->_path = path; }
+void Request::set_host(std::string host) { this->_host = host; }
+void Request::set_port(std::string port) { this->_port = port; }
 void Request::set_connection(std::string connection) { this->_connection = connection; }
 void Request::set_content_length(std::string content_length) { this->_content_length = atoi(content_length.c_str()); }
 void Request::set_content_type(std::string content_type) { this->_content_type = content_type; }
@@ -32,6 +34,8 @@ void Request::set_read_bytes(size_t read_bytes) { this->_read_bytes = read_bytes
 void Request::set_path_to_upload(std::string path_to_upload) { this->_path_to_upload = path_to_upload; }
 std::string Request::get_method() const { return _method; }
 std::string Request::get_path() const { return _path; }
+std::string Request::get_host() const { return _host; }
+std::string Request::get_port() const { return _port; }
 std::string Request::get_connection() const { return _connection; }
 size_t Request::get_content_length() const { return _content_length; }
 std::string Request::get_content_type() const { return _content_type; }
@@ -153,6 +157,9 @@ int Handle_request_response::recv_request(int fd, Server &server)
 				requests[fd].first.set_status_code(first_line_status);
 				return DONE;
 			}
+			std::string host_port = find_value("Host:", received);
+			requests[fd].first.set_host(split_string(host_port, ":")[0]);
+			requests[fd].first.set_port(split_string(host_port, ":")[1]);
 			requests[fd].first.set_connection(find_value("Connection:", received));
 			requests[fd].first.set_content_length(find_value("Content-Length:", received));
 			if (requests[fd].first.get_content_length() > server.get_client_max_body_size())
@@ -413,6 +420,13 @@ std::string Handle_request_response::generate_random_name()
 //////////////////////////////////////////////////
 int Handle_request_response::send_response(int fd)
 {
+	std::string autoindex_file;
+
+	if (requests[fd].second.get_autoindex() == true)
+	{
+		autoindex_file = autoindex_maker(fd);
+		requests[fd].second.set_content_length(autoindex_file.size());
+	}
 	// send header
 	if (!requests[fd].second.get_header_sent())
 	{
@@ -428,30 +442,34 @@ int Handle_request_response::send_response(int fd)
 			requests[fd].second.set_header_sent(HEADER_SENT);
 	}
 	// send body in case of GET request
-	// !! if autoindex is on, a directory is requested
 	if (requests[fd].first.get_method() == "GET")
 	{
 		// send body code
-		std::ifstream requested_file(requests[fd].first.get_path());
-		char buffer[BUFFER_SIZE];
-		size_t read;
-		size_t bytes_sent = 0;
-
-		if (requests[fd].second.get_content_length() - requests[fd].second.get_sent_sofar())
+		if (requests[fd].second.get_autoindex() == true)
+			send_string(fd, autoindex_file);
+		else
 		{
-			requested_file.seekg(requests[fd].second.get_sent_sofar());
-			requested_file.read(buffer, BUFFER_SIZE - 1);
-			read = requested_file.gcount();
-			buffer[read] = '\0';
+			std::ifstream requested_file(requests[fd].first.get_path());
+			char buffer[BUFFER_SIZE];
+			size_t read;
+			size_t bytes_sent = 0;
 
-			do
+			if (requests[fd].second.get_content_length() - requests[fd].second.get_sent_sofar())
 			{
-				size_t sent = send(fd, buffer + bytes_sent, read, 0);
-				bytes_sent += sent;
-			} while (bytes_sent < read);
-			requests[fd].second.set_sent_sofar(requests[fd].second.get_sent_sofar() + read);
-			requested_file.close();
-			return CHUNCKED;
+				requested_file.seekg(requests[fd].second.get_sent_sofar());
+				requested_file.read(buffer, BUFFER_SIZE - 1);
+				read = requested_file.gcount();
+				buffer[read] = '\0';
+
+				do
+				{
+					size_t sent = send(fd, buffer + bytes_sent, read, 0);
+					bytes_sent += sent;
+				} while (bytes_sent < read);
+				requests[fd].second.set_sent_sofar(requests[fd].second.get_sent_sofar() + read);
+				requested_file.close();
+				return CHUNCKED;
+			}
 		}
 		requests[fd].first.clear_request();
 		requests[fd].second.clear_response();
@@ -481,7 +499,10 @@ std::string Handle_request_response::header_maker(short fd)
 		header += "Content-Length: ";
 		header += to_string(requests[fd].second.get_content_length());
 		header += "\r\n";
-		header += content_type_maker(ext_from_path(requests[fd].first.get_path()));
+		if (requests[fd].second.get_autoindex())
+			header += "Content-Type: text/html\r\n";
+		else
+			header += content_type_maker(ext_from_path(requests[fd].first.get_path()));
 	}
 	header += "\r\n";
 	return header;
@@ -637,4 +658,58 @@ std::string Handle_request_response::to_string(int i)
 	ss << i;
 	ss >> str;
 	return str;
+}
+std::string Handle_request_response::autoindex_maker(int fd)
+{
+	DIR *dr;
+	struct dirent *en;
+
+	std::string autoindex_file;
+	autoindex_file = "\
+	<!DOCTYPE html>\n\
+	<html lang=\"en\">\n\
+		<head>\n\
+			<meta charset=\"UTF-8\">\n\
+			<title>Index</title>\n\
+		</head>\n\
+		<body>\n\
+		<h1>Index</h1>\n\
+		<hr>\n<ul>\n";
+
+	dr = opendir(requests[fd].first.get_path().c_str());
+	while ((en = readdir(dr)) != NULL)
+	{
+		if (!strcmp(en->d_name, "."))
+			continue;
+		else if (!strcmp(en->d_name, ".."))
+			autoindex_file += "\t\t<li><a href=\"..\">..</a></li>\n";
+		else
+		{
+			autoindex_file += "\t\t<li><a href=\"http://";
+			autoindex_file += requests[fd].first.get_host() + ":" + requests[fd].first.get_port();
+			autoindex_file += requests[fd].first.get_path().substr(requests[fd].first.get_path().find("/"));
+			autoindex_file += requests[fd].first.get_path().back() != '/' ? "/" : "";
+			autoindex_file += en->d_name;
+			autoindex_file += "\">";
+			autoindex_file += requests[fd].first.get_path();
+			autoindex_file += requests[fd].first.get_path().back() != '/' ? "/" : "";
+			autoindex_file += en->d_name;
+			autoindex_file += "</a></li>\n";
+		}
+	}
+	autoindex_file += "\t</ul>\n</body>\n</html>";
+	closedir(dr);
+	return autoindex_file;
+}
+void Handle_request_response::send_string(int fd, std::string to_send)
+{
+	size_t len = to_send.size();
+	size_t total_send = 0;
+
+	do
+	{
+		size_t sent = send(fd, to_send.c_str(), to_send.size(), 0);
+		to_send = to_send.substr(sent);
+		total_send += sent;
+	} while (total_send < len);
 }
