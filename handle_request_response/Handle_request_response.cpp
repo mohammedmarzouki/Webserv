@@ -121,7 +121,7 @@ int Handle_request_response::recv_request(int fd, Server &server)
 	}
 
 	char temp[BUFFER_SIZE];
-	size_t r = recv(fd, temp, BUFFER_SIZE - 1, 0);
+	long r = recv(fd, temp, BUFFER_SIZE - 1, 0);
 
 	if (r < 1)
 	{
@@ -446,8 +446,8 @@ int Handle_request_response::send_response(int fd)
 	{
 		if (requests[fd].second.get_header().size() == 0)
 			requests[fd].second.set_header(header_maker(fd));
-		size_t s = send(fd, requests[fd].second.get_header().c_str(), requests[fd].second.get_header().size(), 0);
-		if (s < requests[fd].second.get_header().size())
+		long s = send(fd, requests[fd].second.get_header().c_str(), requests[fd].second.get_header().size(), 0);
+		if (s < (long)requests[fd].second.get_header().size())
 		{
 			requests[fd].second.set_header(requests[fd].second.get_header().substr(s));
 			return KEEP_ALIVE;
@@ -464,9 +464,8 @@ int Handle_request_response::send_response(int fd)
 		else
 		{
 			std::ifstream requested_file(requests[fd].first.get_path());
-			char buffer[BUFFER_SIZE];
-			size_t read;
-			size_t bytes_sent = 0;
+			char buffer[BUFFER_SIZE] = {[0 ... BUFFER_SIZE - 1] = 0};
+			long read;
 
 			if (requests[fd].second.get_content_length() - requests[fd].second.get_sent_sofar())
 			{
@@ -475,12 +474,14 @@ int Handle_request_response::send_response(int fd)
 				read = requested_file.gcount();
 				buffer[read] = '\0';
 
-				do
+				long sent = send(fd, buffer, read, 0);
+				if (sent < 0)
 				{
-					size_t sent = send(fd, buffer + bytes_sent, read, 0);
-					bytes_sent += sent;
-				} while (bytes_sent < read);
-				requests[fd].second.set_sent_sofar(requests[fd].second.get_sent_sofar() + read);
+					requests[fd].first.clear_request();
+					requests[fd].second.clear_response();
+					return KILL_CONNECTION;
+				}
+				requests[fd].second.set_sent_sofar(requests[fd].second.get_sent_sofar() + sent);
 				requested_file.close();
 				return CHUNCKED;
 			}
