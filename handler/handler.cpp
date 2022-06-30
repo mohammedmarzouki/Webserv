@@ -145,7 +145,7 @@ void looper(std::vector<Server> servers)
 		{
 			if (FD_ISSET(i, &tmp_rd))
 				ReadyToRead(i, rd, wr, max_fd);
-			else if (FD_ISSET(i, &tmp_wr))
+			if (FD_ISSET(i, &tmp_wr))
 				ReadyToWrite(i, rd, wr, max_fd);
 		}
 	}

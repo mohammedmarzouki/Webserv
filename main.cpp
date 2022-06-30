@@ -46,11 +46,17 @@ void exit_err(std::string &err)
 	exit(EXIT_FAILURE);
 }
 
+void signal_pipe(int sig)
+{
+	(void)sig;
+}
+
 int main(int argc, char **argv)
 {
 	std::string config_file;
 	std::vector<Server> servers;
 
+	signal(SIGPIPE, signal_pipe);
 	//////////////////////////////////////////////////
 	// Initialization
 	//////////////////////////////////////////////////
