@@ -286,11 +286,25 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 
 	if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
 		return CHUNCKED;
+	requests[fd].first.set_status_code(NO_CONTENT);
 	return DONE;
 }
 int Handle_request_response::delete_handle(int fd)
 {
-	(void)fd;
+	struct stat info;
+	std::string path = requests[fd].first.get_path();
+
+	if (stat(path.c_str(), &info) != 0)
+		requests[fd].first.set_status_code(NOT_FOUND);
+	else
+	{
+		std::string path_to_delete = "rm -rf " + path;
+		int i = system(path_to_delete.c_str());
+		if (!i)
+			requests[fd].first.set_status_code(NO_CONTENT);
+		else
+			requests[fd].first.set_status_code(INTERNAL_SERVER_ERROR);
+	}
 	return DONE;
 }
 
@@ -524,6 +538,9 @@ std::string Handle_request_response::status_line_maker(short status_code)
 		break;
 	case CREATED:
 		return base + "201 Created\r\n";
+		break;
+	case NO_CONTENT:
+		return base + "204 No Content\r\n";
 		break;
 	case MOVED_PERMANENTLY:
 		return base + "301 Moved Permanently\r\n";
