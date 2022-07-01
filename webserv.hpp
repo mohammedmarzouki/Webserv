@@ -20,4 +20,3 @@ void exit_err(std::string &);
 // !! redirection
 // !! one recv()/send()
 // !! clear() that clears and returns right connection status
-// !! delete with permission and without

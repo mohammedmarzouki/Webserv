@@ -336,20 +336,30 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 }
 int Handle_request_response::delete_handle(int fd)
 {
-	struct stat info;
+	struct stat statbuf;
 	std::string path = requests[fd].first.get_path();
+	std::string path_to_delete;
 
-	if (stat(path.c_str(), &info) != 0)
-		requests[fd].first.set_status_code(NOT_FOUND);
-	else
+	if (stat(path.c_str(), &statbuf) != 0)
 	{
-		std::string path_to_delete = "rm -rf " + path;
+		requests[fd].first.set_status_code(NOT_FOUND);
+		return DONE;
+	}
+	else if (S_ISREG(statbuf.st_mode))
+		path_to_delete = "rm " + path;
+	else if (S_ISDIR(statbuf.st_mode))
+		path_to_delete = "rm -r " + path;
+
+	if (S_IWUSR & statbuf.st_mode)
+	{
 		int i = system(path_to_delete.c_str());
 		if (!i)
 			requests[fd].first.set_status_code(NO_CONTENT);
 		else
 			requests[fd].first.set_status_code(INTERNAL_SERVER_ERROR);
 	}
+	else
+		requests[fd].first.set_status_code(FORBIDDEN);
 	return DONE;
 }
 
