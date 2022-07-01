@@ -177,6 +177,8 @@ public:
 	void fix_path(Request &);
 	std::vector<std::string> split_string(std::string, std::string);
 	std::string generate_random_name();
+	int str_to_int(std::string);
+	int hex_to_dec(std::string);
 
 	int send_response(int, Server &);
 	std::string header_maker(short);
@@ -189,8 +191,6 @@ public:
 	void send_string(int, std::string);
 	std::string defined_error_page_found(std::vector<std::string> &, short);
 	std::string int_to_str(int);
-	int str_to_int(std::string);
-	int hex_to_dec(std::string);
 };
 
 #endif // HANDLE_REQUEST_RESPONSE_HPP
