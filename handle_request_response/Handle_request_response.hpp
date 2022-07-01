@@ -172,7 +172,7 @@ public:
 	std::vector<std::string> split_string(std::string, std::string);
 	std::string generate_random_name();
 
-	int send_response(int);
+	int send_response(int, Server &);
 	std::string header_maker(short);
 	std::string status_code_maker(short);
 	std::string content_type_maker(std::string);
@@ -182,6 +182,7 @@ public:
 	std::string autoindex_maker(int);
 	std::string error_page_maker(short);
 	void send_string(int, std::string);
+	std::string defined_error_page_found(std::vector<std::string> &, short);
 };
 
 #endif // HANDLE_REQUEST_RESPONSE_HPP

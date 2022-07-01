@@ -98,7 +98,7 @@ void ReadyToWrite(int &fd, fd_set &rd, fd_set &wr, int &max_fd)
 {
 
 	// PRINT(fd);
-	switch (handler.send_response(fd))
+	switch (handler.send_response(fd, search_server(cli_srv[fd])))
 	{
 	case KILL_CONNECTION:
 		FD_CLR(fd, &wr);

@@ -191,7 +191,6 @@ int Handle_request_response::get_handle(int fd)
 	struct stat info;
 	std::string path = requests[fd].first.get_path();
 	std::string ext = ext_from_path(path);
-
 	if (stat(path.c_str(), &info) != 0)
 	{
 		// request resource not found
@@ -432,12 +431,15 @@ std::string Handle_request_response::generate_random_name()
 //////////////////////////////////////////////////
 // Response
 //////////////////////////////////////////////////
-int Handle_request_response::send_response(int fd)
+int Handle_request_response::send_response(int fd, Server &server)
 {
 	if (requests[fd].first.get_status_code() != 200 && requests[fd].first.get_status_code() != 204)
 	{
 		std::string error_page;
-		std::string error_html = error_page_maker(requests[fd].first.get_status_code());
+		std::vector<std::string> defined_error_pages = server.get_error_page();
+		std::string error_html = defined_error_page_found(defined_error_pages, requests[fd].first.get_status_code());
+		if (!error_html.size())
+			error_html = error_page_maker(requests[fd].first.get_status_code());
 
 		error_page += "HTTP/1.1 " + status_code_maker(requests[fd].first.get_status_code());
 		error_page += "Content-Type: text/html\r\n";
@@ -750,4 +752,21 @@ void Handle_request_response::send_string(int fd, std::string to_send)
 		to_send = to_send.substr(sent);
 		total_send += sent;
 	} while (total_send < len);
+}
+std::string Handle_request_response::defined_error_page_found(std::vector<std::string> &defined_error_pages, short status_code)
+{
+	std::vector<std::string>::iterator it;
+	it = find(defined_error_pages.begin(), defined_error_pages.end(), to_string(status_code));
+	if (it != defined_error_pages.end())
+	{
+		std::string error_page = *(++it);
+		std::ifstream file(error_page.substr(1));
+		if (file.good())
+		{
+			std::stringstream buffer;
+			buffer << file.rdbuf();
+			return buffer.str();
+		}
+	}
+	return "";
 }
