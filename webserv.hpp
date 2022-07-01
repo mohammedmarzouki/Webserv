@@ -16,3 +16,8 @@ void exit_err(std::string &);
 
 // () = include()
 // webserv ( handler ( Handle_request_response ( Parser ) ) )
+
+// !! redirection
+// !! one recv()/send()
+// !! clear() that clears and returns right connection status
+// !! delete with permission and without

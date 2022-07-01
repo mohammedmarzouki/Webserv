@@ -76,6 +76,8 @@ private:
 	short _header_status;
 	size_t _read_bytes;
 	std::string _path_to_upload;
+	long _chunked_bytes;
+	std::string _chunked_temp;
 
 public:
 	Request();
@@ -92,8 +94,10 @@ public:
 	void set_location(Location);
 	void set_status_code(short);
 	void set_header_status(short);
-	void set_path_to_upload(std::string);
 	void set_read_bytes(size_t);
+	void set_path_to_upload(std::string);
+	void set_chunked_bytes(long);
+	void set_chunked_temp(std::string);
 	std::string get_method() const;
 	std::string get_path() const;
 	std::string get_host() const;
@@ -108,6 +112,8 @@ public:
 	short get_status_code() const;
 	size_t get_read_bytes() const;
 	std::string get_path_to_upload() const;
+	long get_chunked_bytes() const;
+	std::string get_chunked_temp() const;
 
 	void clear_request();
 };
@@ -178,11 +184,13 @@ public:
 	std::string content_type_maker(std::string);
 	std::string extension_maker(std::string);
 	std::string ext_from_path(std::string);
-	std::string to_string(int);
 	std::string autoindex_maker(int);
 	std::string error_page_maker(short);
 	void send_string(int, std::string);
 	std::string defined_error_page_found(std::vector<std::string> &, short);
+	std::string int_to_str(int);
+	int str_to_int(std::string);
+	int hex_to_dec(std::string);
 };
 
 #endif // HANDLE_REQUEST_RESPONSE_HPP

@@ -7,7 +7,7 @@ Request::Request()
 {
 	_method = "NULL";
 	_path = "NULL";
-	_connection = "NULL";
+	_connection = "keep-alive";
 	_content_length = 0;
 	_content_type = "";
 	_transfer_encoding = "NULL";
@@ -16,6 +16,8 @@ Request::Request()
 	_header_status = RECEIVE;
 	_read_bytes = 0;
 	_path_to_upload = "";
+	_chunked_bytes = -1;
+	_chunked_temp = "";
 }
 
 void Request::set_method(std::string method) { this->_method = method; }
@@ -32,6 +34,8 @@ void Request::set_status_code(short status_code) { this->_status_code = status_c
 void Request::set_header_status(short header_status) { this->_header_status = header_status; }
 void Request::set_read_bytes(size_t read_bytes) { this->_read_bytes = read_bytes; }
 void Request::set_path_to_upload(std::string path_to_upload) { this->_path_to_upload = path_to_upload; }
+void Request::set_chunked_bytes(long chunked_bytes) { this->_chunked_bytes = chunked_bytes; }
+void Request::set_chunked_temp(std::string chunked_temp) { this->_chunked_temp = chunked_temp; }
 std::string Request::get_method() const { return _method; }
 std::string Request::get_path() const { return _path; }
 std::string Request::get_host() const { return _host; }
@@ -46,6 +50,8 @@ short Request::get_status_code() const { return _status_code; }
 short Request::get_header_status() const { return _header_status; }
 size_t Request::get_read_bytes() const { return _read_bytes; }
 std::string Request::get_path_to_upload() const { return _path_to_upload; }
+long Request::get_chunked_bytes() const { return _chunked_bytes; }
+std::string Request::get_chunked_temp() const { return _chunked_temp; }
 
 void Request::clear_request()
 {
@@ -60,6 +66,8 @@ void Request::clear_request()
 	_header_status = RECEIVE;
 	_read_bytes = 0;
 	_path_to_upload = "";
+	_chunked_bytes = -1;
+	_chunked_temp = "";
 }
 
 //////////////////////////////////////////////////
@@ -161,6 +169,12 @@ int Handle_request_response::recv_request(int fd, Server &server)
 			requests[fd].first.set_host(split_string(host_port, ":")[0]);
 			requests[fd].first.set_port(split_string(host_port, ":")[1]);
 			requests[fd].first.set_connection(find_value("Connection:", received));
+			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
+			if (requests[fd].first.get_transfer_encoding() != "NULL" && requests[fd].first.get_transfer_encoding() != "chunked")
+			{
+				requests[fd].first.set_status_code(NOT_IMPLEMENTED);
+				return DONE;
+			}
 			requests[fd].first.set_content_length(find_value("Content-Length:", received));
 			if (requests[fd].first.get_content_length() > server.get_client_max_body_size())
 			{
@@ -168,12 +182,6 @@ int Handle_request_response::recv_request(int fd, Server &server)
 				return DONE;
 			}
 			requests[fd].first.set_content_type(find_value("Content-Type:", received));
-			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
-			if (requests[fd].first.get_transfer_encoding() != "NULL" && requests[fd].first.get_transfer_encoding() != "chunked")
-			{
-				requests[fd].first.set_status_code(NOT_IMPLEMENTED);
-				return DONE;
-			}
 			fix_path(requests[fd].first);
 			requests[fd].first.set_header_status(PARSED);
 		}
@@ -257,34 +265,72 @@ int Handle_request_response::get_handle(int fd)
 }
 int Handle_request_response::post_handle(int fd, std::string &received, int r)
 {
-	// !! chunked parsing
 	if (requests[fd].first.get_header_status() == PARSED)
 	{
-		received = received.substr(received.find("\r\n\r\n") + 4);
-		requests[fd].first.set_read_bytes(received.size());
-		requests[fd].first.set_header_status(FULLY_PARSED);
-
-		// if location accept POST and doesn't have directive is concidered an error
+		// if location accept POST and doesn't have upload directive is concidered an error
 		if (requests[fd].first.get_location().get_upload() == "NULL")
 		{
 			requests[fd].first.set_status_code(NOT_IMPLEMENTED);
 			return DONE;
 		}
+		received = received.substr(received.find("\r\n\r\n") + 4);
+		requests[fd].first.set_read_bytes(received.size());
+		requests[fd].first.set_header_status(FULLY_PARSED);
 
 		// create folder to upload to
 		requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_location().get_upload().substr(1));
 		system(requests[fd].first.get_path_to_upload().c_str());
 		requests[fd].first.set_path_to_upload(requests[fd].first.get_location().get_upload().substr(1) + "/" + generate_random_name() + extension_maker(requests[fd].first.get_content_type()));
 	}
-	else
+	else if (requests[fd].first.get_transfer_encoding() != "chunked") // counting not needed in case of chunked
 		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
 
-	std::ofstream upload_file(requests[fd].first.get_path_to_upload(), std::ios::out | std::ios::app);
-	upload_file << received;
-	upload_file.close();
+	if (requests[fd].first.get_transfer_encoding() == "chunked")
+	{
+		size_t endline_pos;
+		requests[fd].first.set_chunked_temp(requests[fd].first.get_chunked_temp() + received);
+		endline_pos = requests[fd].first.get_chunked_temp().find("\r\n");
 
-	if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
-		return CHUNCKED;
+		while (endline_pos != std::string::npos)
+		{
+			if (requests[fd].first.get_chunked_bytes() == -1)
+			{
+				requests[fd].first.set_chunked_bytes(hex_to_dec(requests[fd].first.get_chunked_temp().substr(0, endline_pos)));
+				if (!requests[fd].first.get_chunked_bytes())
+				{
+					requests[fd].first.set_status_code(NO_CONTENT);
+					return DONE;
+				}
+				requests[fd].first.set_chunked_temp(requests[fd].first.get_chunked_temp().substr(endline_pos + 2));
+				endline_pos = requests[fd].first.get_chunked_temp().find("\r\n");
+			}
+			else
+			{
+				size_t chunked_bytes = requests[fd].first.get_chunked_bytes();
+				if (requests[fd].first.get_chunked_temp().size() >= chunked_bytes)
+				{
+					std::ofstream upload_file(requests[fd].first.get_path_to_upload(), std::ios::out | std::ios::app);
+					upload_file << requests[fd].first.get_chunked_temp().substr(0, chunked_bytes);
+					upload_file.close();
+					requests[fd].first.set_chunked_temp(requests[fd].first.get_chunked_temp().substr(chunked_bytes + 2));
+					requests[fd].first.set_chunked_bytes(-1);
+					endline_pos = requests[fd].first.get_chunked_temp().find("\r\n");
+				}
+				else
+					break;
+			}
+		}
+		return CHUNKED;
+	}
+	else
+	{
+		std::ofstream upload_file(requests[fd].first.get_path_to_upload(), std::ios::out | std::ios::app);
+		upload_file << received;
+		upload_file.close();
+
+		if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
+			return CHUNCKED;
+	}
 	requests[fd].first.set_status_code(NO_CONTENT);
 	return DONE;
 }
@@ -424,7 +470,7 @@ std::string Handle_request_response::generate_random_name()
 	std::string random_name;
 
 	srand(time(0));
-	random_name = "file_" + to_string(rand());
+	random_name = "file_" + int_to_str(rand());
 	return random_name;
 }
 
@@ -443,7 +489,7 @@ int Handle_request_response::send_response(int fd, Server &server)
 
 		error_page += "HTTP/1.1 " + status_code_maker(requests[fd].first.get_status_code());
 		error_page += "Content-Type: text/html\r\n";
-		error_page += "Content-Length: " + to_string(error_html.size()) + "\r\n\r\n";
+		error_page += "Content-Length: " + int_to_str(error_html.size()) + "\r\n\r\n";
 		error_page += error_html;
 		send_string(fd, error_page);
 		requests[fd].first.clear_request();
@@ -527,7 +573,7 @@ std::string Handle_request_response::header_maker(short fd)
 	if (requests[fd].first.get_method() == "GET")
 	{
 		header += "Content-Length: ";
-		header += to_string(requests[fd].second.get_content_length());
+		header += int_to_str(requests[fd].second.get_content_length());
 		header += "\r\n";
 		if (requests[fd].second.get_autoindex())
 			header += "Content-Type: text/html\r\n";
@@ -587,7 +633,7 @@ std::string Handle_request_response::status_code_maker(short status_code)
 		return "501 Not Implemented\r\n";
 		break;
 	default:
-		return to_string(status_code);
+		return int_to_str(status_code);
 	}
 }
 std::string Handle_request_response::content_type_maker(std::string ext)
@@ -675,15 +721,6 @@ std::string Handle_request_response::ext_from_path(std::string path)
 		return path.substr(++dot_pos);
 	return "";
 }
-std::string Handle_request_response::to_string(int i)
-{
-	std::stringstream ss;
-	std::string str;
-
-	ss << i;
-	ss >> str;
-	return str;
-}
 std::string Handle_request_response::autoindex_maker(int fd)
 {
 	DIR *dr;
@@ -756,7 +793,7 @@ void Handle_request_response::send_string(int fd, std::string to_send)
 std::string Handle_request_response::defined_error_page_found(std::vector<std::string> &defined_error_pages, short status_code)
 {
 	std::vector<std::string>::iterator it;
-	it = find(defined_error_pages.begin(), defined_error_pages.end(), to_string(status_code));
+	it = find(defined_error_pages.begin(), defined_error_pages.end(), int_to_str(status_code));
 	if (it != defined_error_pages.end())
 	{
 		std::string error_page = *(++it);
@@ -769,4 +806,37 @@ std::string Handle_request_response::defined_error_page_found(std::vector<std::s
 		}
 	}
 	return "";
+}
+std::string Handle_request_response::int_to_str(int i)
+{
+	std::stringstream ss;
+	std::string str;
+
+	ss << i;
+	ss >> str;
+	return str;
+}
+int Handle_request_response::str_to_int(std::string str)
+{
+	std::stringstream ss;
+	int i;
+
+	ss << str;
+	ss >> i;
+	return i;
+}
+int Handle_request_response::hex_to_dec(std::string hex_val)
+{
+	int base = 1;
+	int dec_val = 0;
+
+	for (int i = hex_val.size() - 1; i >= 0; i--)
+	{
+		if (hex_val[i] >= '0' && hex_val[i] <= '9')
+			dec_val += (int(hex_val[i]) - 48) * base;
+		else if (hex_val[i] >= 'a' && hex_val[i] <= 'f')
+			dec_val += (int(hex_val[i]) - 87) * base;
+		base = base * 16;
+	}
+	return dec_val;
 }
