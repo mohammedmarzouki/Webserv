@@ -3,8 +3,6 @@
 //////////////////////////////////////////////////
 // Request
 //////////////////////////////////////////////////
-Handle_request_response::Handle_request_response() {}
-
 int Handle_request_response::recv_request(int fd, Server &server)
 {
 	/// if server doesn't exist, add it to the map
@@ -15,17 +13,17 @@ int Handle_request_response::recv_request(int fd, Server &server)
 	}
 
 	char temp[BUFFER_SIZE];
-	long r = recv(fd, temp, BUFFER_SIZE - 1, 0);
+	long read = recv(fd, temp, BUFFER_SIZE - 1, 0);
 
-	if (r < 1)
+	if (read <= 0)
 	{
 		requests.erase(fd);
 		return FAILED;
 	}
 	else
 	{
-		temp[r] = '\0';
-		std::string received(temp, r);
+		temp[read] = '\0';
+		std::string received(temp, read);
 		// recv header
 		if (!requests[fd].first.get_header_status())
 		{
@@ -75,7 +73,7 @@ int Handle_request_response::recv_request(int fd, Server &server)
 		if (requests[fd].first.get_method() == "GET")
 			return Handle_request_response::get_handle(fd);
 		if (requests[fd].first.get_method() == "POST")
-			return Handle_request_response::post_handle(fd, received, r);
+			return Handle_request_response::post_handle(fd, received, read);
 		else
 			return Handle_request_response::delete_handle(fd);
 	}
@@ -149,7 +147,7 @@ int Handle_request_response::get_handle(int fd)
 		return DONE;
 	}
 }
-int Handle_request_response::post_handle(int fd, std::string &received, int r)
+int Handle_request_response::post_handle(int fd, std::string &received, int read)
 {
 	if (requests[fd].first.get_header_status() == PARSED)
 	{
@@ -169,7 +167,7 @@ int Handle_request_response::post_handle(int fd, std::string &received, int r)
 		requests[fd].first.set_path_to_upload(requests[fd].first.get_location().get_upload().substr(1) + "/" + generate_random_name() + extension_maker(requests[fd].first.get_content_type()));
 	}
 	else if (requests[fd].first.get_transfer_encoding() != "chunked") // counting not needed in case of chunked
-		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + r);
+		requests[fd].first.set_read_bytes(requests[fd].first.get_read_bytes() + read);
 
 	if (requests[fd].first.get_transfer_encoding() == "chunked")
 	{

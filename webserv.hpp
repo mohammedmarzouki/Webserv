@@ -19,4 +19,4 @@ void exit_err(std::string &);
 
 // !! redirection
 // !! one recv()/send()
-// !! clear() that clears and returns right connection status
+// !! uri has unaccepted characters

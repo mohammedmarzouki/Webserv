@@ -109,3 +109,10 @@ void Response::clear_response()
 	_content_length = 0;
 	_sent_sofar = 0;
 }
+
+//////////////////////////////////////////////////
+// Handle_request_response class
+//////////////////////////////////////////////////
+Handle_request_response::Handle_request_response() {}
+
+const std::map<int, std::pair<Request, Response> > &Handle_request_response::get_requests() const { return requests; }

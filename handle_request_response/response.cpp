@@ -18,9 +18,7 @@ int Handle_request_response::send_response(int fd, Server &server)
 		error_page += "Content-Length: " + int_to_str(error_html.size()) + "\r\n\r\n";
 		error_page += error_html;
 		send_string(fd, error_page);
-		requests[fd].first.clear_request();
-		requests[fd].second.clear_response();
-		return KEEP_ALIVE;
+		return clear(fd, requests[fd].first.get_connection());
 	}
 	std::string autoindex_file;
 	if (requests[fd].second.get_autoindex() == true)
@@ -33,11 +31,13 @@ int Handle_request_response::send_response(int fd, Server &server)
 	{
 		if (requests[fd].second.get_header().size() == 0)
 			requests[fd].second.set_header(header_maker(fd));
-		long s = send(fd, requests[fd].second.get_header().c_str(), requests[fd].second.get_header().size(), 0);
-		if (s < (long)requests[fd].second.get_header().size())
+		long sent = send(fd, requests[fd].second.get_header().c_str(), requests[fd].second.get_header().size(), 0);
+		if (sent < 0)
+			return clear(fd, "close");
+		if (sent < (long)requests[fd].second.get_header().size())
 		{
-			requests[fd].second.set_header(requests[fd].second.get_header().substr(s));
-			return KEEP_ALIVE;
+			requests[fd].second.set_header(requests[fd].second.get_header().substr(sent));
+			return CHUNKED;
 		}
 		else
 			requests[fd].second.set_header_sent(HEADER_SENT);
@@ -63,26 +63,16 @@ int Handle_request_response::send_response(int fd, Server &server)
 
 				long sent = send(fd, buffer, read, 0);
 				if (sent < 0)
-				{
-					requests[fd].first.clear_request();
-					requests[fd].second.clear_response();
-					return KILL_CONNECTION;
-				}
+					return clear(fd, "close");
 				requests[fd].second.set_sent_sofar(requests[fd].second.get_sent_sofar() + sent);
 				requested_file.close();
 				return CHUNCKED;
 			}
 		}
-		requests[fd].first.clear_request();
-		requests[fd].second.clear_response();
-		return KEEP_ALIVE;
+		return clear(fd, requests[fd].first.get_connection());
 	}
 	else
-	{
-		requests[fd].first.clear_request();
-		requests[fd].second.clear_response();
-		return KEEP_ALIVE;
-	}
+		return clear(fd, requests[fd].first.get_connection());
 }
 
 //////////////////////////////////////////////////
@@ -303,6 +293,16 @@ std::string Handle_request_response::error_page_maker(short status_code)
 	error_page += status_code_maker(status_code);
 	error_page += "</h1>\n</body>\n</html>\n";
 	return error_page;
+}
+int Handle_request_response::clear(int fd, std::string connection)
+{
+	requests[fd].first.clear_request();
+	requests[fd].second.clear_response();
+
+	if (connection == "keep-alive")
+		return KEEP_ALIVE;
+	else
+		return KILL_CONNECTION;
 }
 void Handle_request_response::send_string(int fd, std::string to_send)
 {
