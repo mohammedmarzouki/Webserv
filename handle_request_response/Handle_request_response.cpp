@@ -434,8 +434,21 @@ std::string Handle_request_response::generate_random_name()
 //////////////////////////////////////////////////
 int Handle_request_response::send_response(int fd)
 {
-	std::string autoindex_file;
+	if (requests[fd].first.get_status_code() != 200 && requests[fd].first.get_status_code() != 204)
+	{
+		std::string error_page;
+		std::string error_html = error_page_maker(requests[fd].first.get_status_code());
 
+		error_page += "HTTP/1.1 " + status_code_maker(requests[fd].first.get_status_code());
+		error_page += "Content-Type: text/html\r\n";
+		error_page += "Content-Length: " + to_string(error_html.size()) + "\r\n\r\n";
+		error_page += error_html;
+		send_string(fd, error_page);
+		requests[fd].first.clear_request();
+		requests[fd].second.clear_response();
+		return KEEP_ALIVE;
+	}
+	std::string autoindex_file;
 	if (requests[fd].second.get_autoindex() == true)
 	{
 		autoindex_file = autoindex_maker(fd);
@@ -505,7 +518,7 @@ std::string Handle_request_response::header_maker(short fd)
 {
 	std::string header;
 
-	header = status_line_maker(requests[fd].first.get_status_code());
+	header = "HTTP/1.1 " + status_code_maker(requests[fd].first.get_status_code());
 	header += "Connection: ";
 	header += requests[fd].first.get_connection();
 	header += "\r\n";
@@ -522,62 +535,54 @@ std::string Handle_request_response::header_maker(short fd)
 	header += "\r\n";
 	return header;
 }
-std::string Handle_request_response::status_line_maker(short status_code)
+std::string Handle_request_response::status_code_maker(short status_code)
 {
-	std::string base("HTTP/1.1 ");
-
 	switch (status_code)
 	{
-	case CONTINUE:
-		return base + "100 Continue\r\n";
-		break;
-	case SWITCHING_PROTOCOLS:
-		return base + "101 Switching Protocols\r\n";
-		break;
 	case OK:
-		return base + "200 OK\r\n";
+		return "200 OK\r\n";
 		break;
 	case CREATED:
-		return base + "201 Created\r\n";
+		return "201 Created\r\n";
 		break;
 	case NO_CONTENT:
-		return base + "204 No Content\r\n";
+		return "204 No Content\r\n";
 		break;
 	case MOVED_PERMANENTLY:
-		return base + "301 Moved Permanently\r\n";
+		return "301 Moved Permanently\r\n";
 		break;
 	case FOUND:
-		return base + "302 Found\r\n";
+		return "302 Found\r\n";
 		break;
 	case TEMPORARY_REDIRECT:
-		return base + "307 Temporary Redirect\r\n";
+		return "307 Temporary Redirect\r\n";
 		break;
 	case PERMANENT_REDIRECT:
-		return base + "308 Permanent Redirect\r\n";
+		return "308 Permanent Redirect\r\n";
 		break;
 	case BAD_REQUEST:
-		return base + "400 Bad Request\r\n";
+		return "400 Bad Request\r\n";
 		break;
 	case FORBIDDEN:
-		return base + "403 Forbidden\r\n";
+		return "403 Forbidden\r\n";
 		break;
 	case NOT_FOUND:
-		return base + "404 Not Found\r\n";
+		return "404 Not Found\r\n";
 		break;
 	case METHOD_NOT_ALLOWED:
-		return base + "405 Method Not Allowed\r\n";
+		return "405 Method Not Allowed\r\n";
 		break;
 	case PAYLOAD_TOO_LARGE:
-		return base + "413 Payload Too Large\r\n";
+		return "413 Payload Too Large\r\n";
+		break;
+	case REQUEST_URI_TOO_LONG:
+		return "414 URI Too Long\r\n";
 		break;
 	case INTERNAL_SERVER_ERROR:
-		return base + "500 Internal Server Error\r\n";
+		return "500 Internal Server Error\r\n";
 		break;
 	case NOT_IMPLEMENTED:
-		return base + "501 Not Implemented\r\n";
-		break;
-	case BAD_GATEWAY:
-		return base + "502 Bad Gateway\r\n";
+		return "501 Not Implemented\r\n";
 		break;
 	default:
 		return to_string(status_code);
@@ -709,8 +714,6 @@ std::string Handle_request_response::autoindex_maker(int fd)
 			autoindex_file += requests[fd].first.get_path().back() != '/' ? "/" : "";
 			autoindex_file += en->d_name;
 			autoindex_file += "\">";
-			autoindex_file += requests[fd].first.get_path();
-			autoindex_file += requests[fd].first.get_path().back() != '/' ? "/" : "";
 			autoindex_file += en->d_name;
 			autoindex_file += "</a></li>\n";
 		}
@@ -718,6 +721,23 @@ std::string Handle_request_response::autoindex_maker(int fd)
 	autoindex_file += "\t</ul>\n</body>\n</html>";
 	closedir(dr);
 	return autoindex_file;
+}
+std::string Handle_request_response::error_page_maker(short status_code)
+{
+	std::string error_page;
+
+	error_page = "\
+	<!DOCTYPE html>\n\
+	<html lang=\"en\">\n\
+		<head>\n\
+			<meta charset=\"UTF-8\">\n\
+			<title>Error Page</title>\n\
+		</head>\n\
+		<body>\n\
+		<h1>\n";
+	error_page += status_code_maker(status_code);
+	error_page += "</h1>\n</body>\n</html>\n";
+	return error_page;
 }
 void Handle_request_response::send_string(int fd, std::string to_send)
 {
