@@ -17,6 +17,7 @@ void exit_err(std::string &);
 // () = include()
 // webserv ( handler ( Handle_request_response ( Parser ) ) )
 
-// !! redirection
+// !! parser post checking
+// !! cookies
 // !! one recv()/send()
-// !! uri has unaccepted characters
+// !! redirection

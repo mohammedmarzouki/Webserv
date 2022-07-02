@@ -152,15 +152,10 @@ void Parser::location_directives(Location &location)
 	else if (_lookahead.get_type() == "redirect")
 	{
 		eat("redirect");
-		if (_lookahead.get_type() == "number")
+		if (_lookahead.get_type() == "uri")
 		{
-			location.add_return(_lookahead.get_value());
+			location.set_redirect(_lookahead.get_value());
 			eat(_lookahead.get_type());
-			if (_lookahead.get_type() == "string")
-			{
-				location.add_return(_lookahead.get_value());
-				eat(_lookahead.get_type());
-			}
 		}
 		eat(";");
 	}
@@ -203,7 +198,4 @@ void Parser::location_directives(Location &location)
 		throw std::string("Unexpected token: " + _lookahead.get_value());
 }
 
-std::vector<Server> Parser::get_servers() const
-{
-	return _servers;
-}
+std::vector<Server> Parser::get_servers() const { return _servers; }

@@ -56,7 +56,7 @@ public:
 	std::string match_root(std::string &);
 	std::string match_index(std::string &);
 	std::string match_allow_methods(std::string &);
-	std::string match_return(std::string &);
+	std::string match_redirect(std::string &);
 	std::string match_upload(std::string &);
 	std::string match_autoindex(std::string &);
 	std::string match_cgi(std::string &);
@@ -77,7 +77,7 @@ private:
 	std::string _root;
 	std::vector<std::string> _index;
 	std::vector<std::string> _allow_methods;
-	std::vector<std::string> _return;
+	std::string _redirect;
 	std::vector<std::string> _cgi;
 	std::string _upload;
 	std::string _autoindex;
@@ -93,7 +93,7 @@ public:
 	void set_root(std::string);
 	void add_index(std::string);
 	void add_allow_methods(std::string);
-	void add_return(std::string);
+	void set_redirect(std::string);
 	void add_cgi(std::string);
 	void set_upload(std::string);
 	void set_autoindex(std::string);
@@ -101,7 +101,7 @@ public:
 	std::string get_root() const;
 	std::vector<std::string> get_index() const;
 	std::vector<std::string> get_allow_methods() const;
-	std::vector<std::string> get_return() const;
+	std::string get_redirect() const;
 	std::vector<std::string> get_cgi() const;
 	std::string get_upload() const;
 	std::string get_autoindex() const;

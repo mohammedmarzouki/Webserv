@@ -175,7 +175,7 @@ public:
 	Location right_location(std::string, Server &);
 	Location wanted_location(std::string, Server &);
 	bool is_method_allowed(Location, std::string);
-	void fix_path(Request &);
+	bool fix_path(Request &);
 	std::vector<std::string> split_string(std::string, std::string);
 	std::string generate_random_name();
 	int str_to_int(std::string);

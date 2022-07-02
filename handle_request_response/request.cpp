@@ -53,6 +53,8 @@ int Handle_request_response::recv_request(int fd, Server &server)
 			requests[fd].first.set_host(split_string(host_port, ":")[0]);
 			requests[fd].first.set_port(split_string(host_port, ":")[1]);
 			requests[fd].first.set_connection(find_value("Connection:", received));
+			if (requests[fd].first.get_connection() == "NULL")
+				requests[fd].first.set_connection("keep-alive");
 			requests[fd].first.set_transfer_encoding(find_value("Transfer-Encoding:", received));
 			if (requests[fd].first.get_transfer_encoding() != "NULL" && requests[fd].first.get_transfer_encoding() != "chunked")
 			{
@@ -66,7 +68,11 @@ int Handle_request_response::recv_request(int fd, Server &server)
 				return DONE;
 			}
 			requests[fd].first.set_content_type(find_value("Content-Type:", received));
-			fix_path(requests[fd].first);
+			if (!fix_path(requests[fd].first))
+			{
+				requests[fd].first.set_status_code(NOT_IMPLEMENTED);
+				return DONE;
+			}
 			requests[fd].first.set_header_status(PARSED);
 		}
 
@@ -151,12 +157,6 @@ int Handle_request_response::post_handle(int fd, std::string &received, int read
 {
 	if (requests[fd].first.get_header_status() == PARSED)
 	{
-		// if location accept POST and doesn't have upload directive is concidered an error
-		if (requests[fd].first.get_location().get_upload() == "NULL")
-		{
-			requests[fd].first.set_status_code(NOT_IMPLEMENTED);
-			return DONE;
-		}
 		received = received.substr(received.find("\r\n\r\n") + 4);
 		requests[fd].first.set_read_bytes(received.size());
 		requests[fd].first.set_header_status(FULLY_PARSED);
@@ -334,15 +334,21 @@ bool Handle_request_response::is_method_allowed(Location location, std::string m
 		return true;
 	return false;
 }
-void Handle_request_response::fix_path(Request &request)
+bool Handle_request_response::fix_path(Request &request)
 {
 	Location location = request.get_location();
+
+	// if location accept POST and doesn't have upload directive is concidered an error
+	if (request.get_method() == "POST" && request.get_location().get_upload() == "NULL")
+		return false;
+
 	std::string uri = request.get_method() == "POST" ? location.get_upload().substr(1) : location.get_root().substr(1);
 	size_t route_size = location.get_uri().size();
 
 	// uri.size() == 1 => "/"
 	route_size = route_size == 1 ? 0 : route_size;
 	request.set_path(uri + request.get_path().substr(route_size));
+	return true;
 }
 std::vector<std::string> Handle_request_response::split_string(std::string str, std::string delimiter)
 {
