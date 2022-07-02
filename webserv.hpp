@@ -19,4 +19,3 @@ void exit_err(std::string &);
 
 // !! cookies
 // !! one recv()/send()
-// !! create root on get request

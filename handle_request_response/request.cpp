@@ -86,6 +86,10 @@ int Handle_request_response::recv_request(int fd, Server &server)
 }
 int Handle_request_response::get_handle(int fd)
 {
+	// create root
+	std::string cmd = "mkdir -p " + requests[fd].first.get_location().get_root().substr(1);
+	system(cmd.c_str());
+
 	struct stat info;
 	std::string path = requests[fd].first.get_path();
 	std::string ext = ext_from_path(path);
