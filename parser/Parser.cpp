@@ -122,20 +122,16 @@ void Parser::location_directives(Location &location)
 	{
 		eat("root");
 		if (_lookahead.get_type() == "uri")
-		{
 			location.set_root(_lookahead.get_value());
-			eat(_lookahead.get_type());
-		}
+		eat("uri");
 		eat(";");
 	}
 	else if (_lookahead.get_type() == "index")
 	{
 		eat("index");
-		while (_lookahead.get_value() != ";" && _lookahead.get_type() == "string")
-		{
-			location.add_index(_lookahead.get_value());
-			eat(_lookahead.get_type());
-		}
+		if (_lookahead.get_type() == "string")
+			location.set_index(_lookahead.get_value());
+		eat("string");
 		eat(";");
 	}
 	else if (_lookahead.get_type() == "allow_methods")
@@ -154,30 +150,24 @@ void Parser::location_directives(Location &location)
 	{
 		eat("redirect");
 		if (_lookahead.get_type() == "uri")
-		{
 			location.set_redirect(_lookahead.get_value());
-			eat(_lookahead.get_type());
-		}
+		eat("uri");
 		eat(";");
 	}
 	else if (_lookahead.get_type() == "upload")
 	{
 		eat("upload");
 		if (_lookahead.get_type() == "uri")
-		{
 			location.set_upload(_lookahead.get_value());
-			eat(_lookahead.get_type());
-		}
+		eat("uri");
 		eat(";");
 	}
 	else if (_lookahead.get_type() == "autoindex")
 	{
 		eat("autoindex");
 		if (_lookahead.get_type() == "string")
-		{
 			location.set_autoindex(_lookahead.get_value());
-			eat(_lookahead.get_type());
-		}
+		eat("string");
 		eat(";");
 	}
 	else if (_lookahead.get_type() == "cgi")
@@ -188,10 +178,8 @@ void Parser::location_directives(Location &location)
 			location.add_cgi(_lookahead.get_value());
 			eat(_lookahead.get_type());
 			if (_lookahead.get_type() == "uri")
-			{
 				location.add_cgi(_lookahead.get_value());
-				eat(_lookahead.get_type());
-			}
+			eat("uri");
 		}
 		eat(";");
 	}

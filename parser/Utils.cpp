@@ -253,14 +253,12 @@ Location::Location()
 {
 	this->_uri = "NULL";
 	this->_root = "NULL";
+	this->_index = "NULL";
 	this->_autoindex = "off";
 	this->_upload = "NULL";
 	this->_redirect = "NULL";
 }
-Location::Location(const Location &src)
-{
-	*this = src;
-}
+Location::Location(const Location &src) { *this = src; }
 Location::~Location() {}
 
 Location &Location::operator=(const Location &src)
@@ -278,7 +276,7 @@ Location &Location::operator=(const Location &src)
 
 void Location::set_uri(std::string uri) { _uri = uri; }
 void Location::set_root(std::string root) { _root = root; }
-void Location::add_index(std::string index) { _index.push_back(index); }
+void Location::set_index(std::string index) { _index = index; }
 void Location::add_allow_methods(std::string allow_methods) { _allow_methods.push_back(allow_methods); }
 void Location::set_redirect(std::string redirect) { _redirect = redirect; }
 void Location::add_cgi(std::string cgi) { _cgi.push_back(cgi); }
@@ -287,7 +285,7 @@ void Location::set_autoindex(std::string autoindex) { _autoindex = autoindex; }
 
 std::string Location::get_uri() const { return _uri; }
 std::string Location::get_root() const { return _root; }
-std::vector<std::string> Location::get_index() const { return _index; }
+std::string Location::get_index() const { return _index; }
 std::vector<std::string> Location::get_allow_methods() const { return _allow_methods; }
 std::string Location::get_redirect() const { return _redirect; }
 std::vector<std::string> Location::get_cgi() const { return _cgi; }
@@ -376,8 +374,7 @@ void print_servers(std::vector<Server> &servers)
 			std::cout << "location: " << j << std::endl;
 			std::cout << "	uri:			" << it2->get_uri() << std::endl;
 			std::cout << "	root:			" << it2->get_root() << std::endl;
-			std::cout << "	index:			";
-			print_vector(it2->get_index());
+			std::cout << "	index:			" << it2->get_index() << std::endl;
 			std::cout << "	allow_methods:		";
 			print_vector(it2->get_allow_methods());
 			std::cout << "	redirect:		" << it2->get_redirect() << std::endl;
@@ -392,7 +389,6 @@ void print_servers(std::vector<Server> &servers)
 
 		std::cout << "____________________SERVER " << i << "____________________" << std::endl;
 		std::cout << std::endl
-				  << std::endl
 				  << std::endl;
 		i++;
 		it++;

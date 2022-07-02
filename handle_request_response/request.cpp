@@ -114,33 +114,19 @@ int Handle_request_response::get_handle(int fd)
 	else // if (S_ISDIR(info.st_mode))
 	{
 		// is directory
-		std::vector<std::string> index = requests[fd].first.get_location().get_index();
-		if (index.size())
+		std::string index = requests[fd].first.get_location().get_index();
+		if (index != "NULL")
 		{
 			// if there is an index file
-			std::vector<std::string>::iterator it = index.begin();
-			std::string index_path;
+			std::string index_path = path + "/" + index;
 			struct stat index_info;
-			while (it != index.end())
+			if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
 			{
-				index_path = path + *it;
-				if (stat(index_path.c_str(), &index_info) == 0 && S_ISREG(index_info.st_mode))
-				{
-					requests[fd].first.set_path(index_path);
-					break;
-				}
-				it++;
-			}
-			if (requests[fd].first.get_path() != index_path)
-			{
-				// if no index is found check autoindex
-				if (requests[fd].first.get_location().get_autoindex() == "on")
-					requests[fd].second.set_autoindex(true);
-				else
-					requests[fd].first.set_status_code(FORBIDDEN);
+				requests[fd].first.set_path(index_path);
+				return get_handle(fd);
 			}
 			else
-				get_handle(fd);
+				requests[fd].first.set_status_code(NOT_FOUND);
 		}
 		else
 		{

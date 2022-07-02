@@ -75,7 +75,7 @@ class Location
 private:
 	std::string _uri;
 	std::string _root;
-	std::vector<std::string> _index;
+	std::string _index;
 	std::vector<std::string> _allow_methods;
 	std::string _redirect;
 	std::vector<std::string> _cgi;
@@ -91,7 +91,7 @@ public:
 
 	void set_uri(std::string);
 	void set_root(std::string);
-	void add_index(std::string);
+	void set_index(std::string);
 	void add_allow_methods(std::string);
 	void set_redirect(std::string);
 	void add_cgi(std::string);
@@ -99,7 +99,7 @@ public:
 	void set_autoindex(std::string);
 	std::string get_uri() const;
 	std::string get_root() const;
-	std::vector<std::string> get_index() const;
+	std::string get_index() const;
 	std::vector<std::string> get_allow_methods() const;
 	std::string get_redirect() const;
 	std::vector<std::string> get_cgi() const;
