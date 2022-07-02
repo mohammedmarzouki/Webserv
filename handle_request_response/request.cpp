@@ -89,7 +89,11 @@ int Handle_request_response::get_handle(int fd)
 {
 	// create root
 	std::string cmd = "mkdir -p " + requests[fd].first.get_location().get_root().substr(1);
-	system(cmd.c_str());
+	if (system(cmd.c_str()) < 0)
+	{
+		requests.erase(fd);
+		return FAILED;
+	}
 
 	struct stat info;
 	std::string path = requests[fd].first.get_path();
@@ -154,7 +158,11 @@ int Handle_request_response::post_handle(int fd, std::string &received, int read
 
 		// create folder to upload to
 		requests[fd].first.set_path_to_upload("mkdir -p " + requests[fd].first.get_location().get_upload().substr(1));
-		system(requests[fd].first.get_path_to_upload().c_str());
+		if (system(requests[fd].first.get_path_to_upload().c_str()) < 0)
+		{
+			requests.erase(fd);
+			return FAILED;
+		}
 		requests[fd].first.set_path_to_upload(requests[fd].first.get_location().get_upload().substr(1) + "/" + generate_random_name() + extension_maker(requests[fd].first.get_content_type()));
 	}
 	else if (requests[fd].first.get_transfer_encoding() != "chunked") // counting not needed in case of chunked
@@ -227,8 +235,7 @@ int Handle_request_response::delete_handle(int fd)
 
 	if (S_IWUSR & statbuf.st_mode)
 	{
-		int i = system(path_to_delete.c_str());
-		if (!i)
+		if (!system(path_to_delete.c_str()))
 			requests[fd].first.set_status_code(NO_CONTENT);
 		else
 			requests[fd].first.set_status_code(INTERNAL_SERVER_ERROR);

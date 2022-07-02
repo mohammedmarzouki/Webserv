@@ -17,5 +17,4 @@ void exit_err(std::string &);
 // () = include()
 // webserv ( handler ( Handle_request_response ( Parser ) ) )
 
-// !! cookies
-// !! one recv()/send()
+// !! one send()
