@@ -25,6 +25,7 @@ public:
 	void server_directives(Server &);
 	Location location();
 	void location_directives(Location &);
+	void post_checking();
 
 	std::vector<Server> get_servers() const;
 };

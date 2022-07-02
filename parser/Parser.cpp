@@ -11,6 +11,7 @@ Parser::Parser(std::string config_file)
 	_lookahead = _tokenizer.next_token();
 	while (_lookahead.get_type() == "server")
 		_servers.push_back(server());
+	post_checking();
 }
 Parser::~Parser() {}
 
@@ -196,6 +197,30 @@ void Parser::location_directives(Location &location)
 	}
 	else
 		throw std::string("Unexpected token: " + _lookahead.get_value());
+}
+
+void Parser::post_checking()
+{
+	std::vector<short> ports;
+	std::vector<Server>::iterator it = _servers.begin();
+
+	for (; it != _servers.end(); it++)
+	{
+		ports.push_back(it->get_port());
+
+		std::vector<Location> locations = it->get_locations();
+		if (!locations.size())
+			throw std::string("\033[0;31mError: \033[0mat least one location is required\n");
+		std::vector<Location>::iterator it2 = locations.begin();
+		for (; it2 != locations.end(); it2++)
+			if (it2->get_uri() == "NULL" || it2->get_root() == "NULL")
+				throw std::string("\033[0;31mError: \033[0mlocation uri and root are necessary\n");
+	}
+	// checking for duplicate ports
+	std::sort(ports.begin(), ports.end());
+	std::vector<short>::iterator dup = std::unique(ports.begin(), ports.end());
+	if (dup != ports.end())
+		throw std::string("\033[0;31mError: \033[0mduplicate ports aren't allowed\n");
 }
 
 std::vector<Server> Parser::get_servers() const { return _servers; }

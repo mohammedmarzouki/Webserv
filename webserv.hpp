@@ -17,8 +17,7 @@ void exit_err(std::string &);
 // () = include()
 // webserv ( handler ( Handle_request_response ( Parser ) ) )
 
-// !! parser post checking
-// !! oblige root on location
 // !! cookies
 // !! one recv()/send()
-// !! default string from "NULL" to ""
+// !! create root on get request
+// !! accept only one index file
