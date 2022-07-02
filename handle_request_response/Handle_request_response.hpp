@@ -172,7 +172,7 @@ public:
 
 	int request_first_line(int, std::string, Server &);
 	std::string find_value(std::string, std::string);
-	Location right_location(std::string, Server &);
+	Location right_location(int, std::string, Server &);
 	Location wanted_location(std::string, Server &);
 	bool is_method_allowed(Location, std::string);
 	bool fix_path(Request &);

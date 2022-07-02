@@ -6,7 +6,7 @@
 Request::Request()
 {
 	_method = "NULL";
-	_path = "NULL";
+	_path = "";
 	_connection = "keep-alive";
 	_content_length = 0;
 	_content_type = "";
@@ -56,7 +56,7 @@ std::string Request::get_chunked_temp() const { return _chunked_temp; }
 void Request::clear_request()
 {
 	_method = "NULL";
-	_path = "NULL";
+	_path = "";
 	_connection = "NULL";
 	_content_length = 0;
 	_content_type = "";

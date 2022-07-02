@@ -18,6 +18,7 @@ void exit_err(std::string &);
 // webserv ( handler ( Handle_request_response ( Parser ) ) )
 
 // !! parser post checking
+// !! oblige root on location
 // !! cookies
 // !! one recv()/send()
-// !! redirection
+// !! default string from "NULL" to ""

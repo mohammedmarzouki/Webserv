@@ -263,7 +263,7 @@ int Handle_request_response::request_first_line(int fd, std::string received, Se
 		return BAD_REQUEST;
 
 	std::vector<std::string> splitted_first_line = split_string(received.substr(pos, end_pos - pos), " ");
-	requests[fd].first.set_location(right_location(splitted_first_line[1], server));
+	requests[fd].first.set_location(right_location(fd, splitted_first_line[1], server));
 	if (requests[fd].first.get_location().get_uri() == "NULL")
 		return NOT_FOUND;
 
@@ -271,10 +271,13 @@ int Handle_request_response::request_first_line(int fd, std::string received, Se
 		requests[fd].first.set_method(splitted_first_line[0]);
 	else
 		return METHOD_NOT_ALLOWED;
-	if (splitted_first_line[1].size() <= 1024)
-		requests[fd].first.set_path(splitted_first_line[1]);
-	else
-		return REQUEST_URI_TOO_LONG;
+	if (!requests[fd].first.get_path().size())
+	{
+		if (splitted_first_line[1].size() <= 1024)
+			requests[fd].first.set_path(splitted_first_line[1]);
+		else
+			return REQUEST_URI_TOO_LONG;
+	}
 	return 0;
 }
 std::string Handle_request_response::find_value(std::string key, std::string received)
@@ -289,7 +292,7 @@ std::string Handle_request_response::find_value(std::string key, std::string rec
 	std::vector<std::string> splitted_line = split_string(whole_line, " ");
 	return splitted_line[1];
 }
-Location Handle_request_response::right_location(std::string path, Server &server)
+Location Handle_request_response::right_location(int fd, std::string path, Server &server)
 {
 	Location location;
 
@@ -311,6 +314,13 @@ Location Handle_request_response::right_location(std::string path, Server &serve
 	// if no root location is found an empty location is returned
 	if (location.get_uri() == "NULL")
 		location = wanted_location("/", server);
+
+	// redirection
+	if (location.get_uri() != "NULL" && location.get_redirect() != "NULL")
+	{
+		requests[fd].first.set_path(location.get_redirect());
+		return right_location(fd, location.get_redirect(), server);
+	}
 
 	return location;
 }
