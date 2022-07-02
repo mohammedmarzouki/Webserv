@@ -78,6 +78,7 @@ private:
 	std::string _path_to_upload;
 	long _chunked_bytes;
 	std::string _chunked_temp;
+	std::string _cookie;
 
 public:
 	Request();
@@ -98,6 +99,7 @@ public:
 	void set_path_to_upload(std::string);
 	void set_chunked_bytes(long);
 	void set_chunked_temp(std::string);
+	void set_cookie(std::string);
 	std::string get_method() const;
 	std::string get_path() const;
 	std::string get_host() const;
@@ -114,6 +116,7 @@ public:
 	std::string get_path_to_upload() const;
 	long get_chunked_bytes() const;
 	std::string get_chunked_temp() const;
+	std::string get_cookie() const;
 
 	void clear_request();
 };

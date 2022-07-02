@@ -83,19 +83,17 @@ std::string Handle_request_response::header_maker(short fd)
 	std::string header;
 
 	header = "HTTP/1.1 " + status_code_maker(requests[fd].first.get_status_code());
-	header += "Connection: ";
-	header += requests[fd].first.get_connection();
-	header += "\r\n";
+	header += "Connection: " + requests[fd].first.get_connection() + "\r\n";
 	if (requests[fd].first.get_method() == "GET")
 	{
 		header += "Content-Length: ";
-		header += int_to_str(requests[fd].second.get_content_length());
-		header += "\r\n";
+		header += int_to_str(requests[fd].second.get_content_length()) + "\r\n";
 		if (requests[fd].second.get_autoindex())
 			header += "Content-Type: text/html\r\n";
 		else
 			header += content_type_maker(ext_from_path(requests[fd].first.get_path()));
 	}
+	header += "Set-Cookie: user1=tjmari\r\nSet-Cookie: user2=mmarzouk\r\n";
 	header += "\r\n";
 	return header;
 }

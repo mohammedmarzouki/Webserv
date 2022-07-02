@@ -73,6 +73,7 @@ int Handle_request_response::recv_request(int fd, Server &server)
 				requests[fd].first.set_status_code(NOT_IMPLEMENTED);
 				return DONE;
 			}
+			requests[fd].first.set_cookie(find_value("Cookie:", received));
 			requests[fd].first.set_header_status(PARSED);
 		}
 
