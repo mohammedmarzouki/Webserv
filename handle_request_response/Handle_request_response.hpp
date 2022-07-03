@@ -193,7 +193,7 @@ public:
 	std::string autoindex_maker(int);
 	std::string error_page_maker(short);
 	int clear(int, std::string);
-	void send_string(int, std::string);
+	bool send_string(int, std::string);
 	std::string defined_error_page_found(std::vector<std::string> &, short);
 	std::string int_to_str(int);
 };

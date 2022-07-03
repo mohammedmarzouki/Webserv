@@ -17,9 +17,14 @@ int Handle_request_response::send_response(int fd, Server &server)
 		error_page += "Content-Type: text/html\r\n";
 		error_page += "Content-Length: " + int_to_str(error_html.size()) + "\r\n\r\n";
 		error_page += error_html;
-		send_string(fd, error_page);
+		if (!send_string(fd, error_page))
+		{
+			requests.erase(fd);
+			return FAILED;
+		}
 		return clear(fd, requests[fd].first.get_connection());
 	}
+	// autoindex pre processing
 	std::string autoindex_file;
 	if (requests[fd].second.get_autoindex() == true)
 	{
@@ -31,23 +36,26 @@ int Handle_request_response::send_response(int fd, Server &server)
 	{
 		if (requests[fd].second.get_header().size() == 0)
 			requests[fd].second.set_header(header_maker(fd));
-		long sent = send(fd, requests[fd].second.get_header().c_str(), requests[fd].second.get_header().size(), 0);
-		if (sent < 0)
-			return clear(fd, "close");
-		if (sent < (long)requests[fd].second.get_header().size())
+		if (!send_string(fd, requests[fd].second.get_header()))
 		{
-			requests[fd].second.set_header(requests[fd].second.get_header().substr(sent));
-			return CHUNKED;
+			requests.erase(fd);
+			return FAILED;
 		}
-		else
-			requests[fd].second.set_header_sent(HEADER_SENT);
+		requests[fd].second.set_header_sent(HEADER_SENT);
+		return CHUNKED;
 	}
 	// send body in case of GET request
-	if (requests[fd].first.get_method() == "GET")
+	else if (requests[fd].first.get_method() == "GET")
 	{
 		// send body code
 		if (requests[fd].second.get_autoindex() == true)
-			send_string(fd, autoindex_file);
+		{
+			if (!send_string(fd, autoindex_file))
+			{
+				requests.erase(fd);
+				return FAILED;
+			}
+		}
 		else
 		{
 			std::ifstream requested_file(requests[fd].first.get_path());
@@ -63,7 +71,10 @@ int Handle_request_response::send_response(int fd, Server &server)
 
 				long sent = send(fd, buffer, read, 0);
 				if (sent < 0)
-					return clear(fd, "close");
+				{
+					requests.erase(fd);
+					return FAILED;
+				}
 				requests[fd].second.set_sent_sofar(requests[fd].second.get_sent_sofar() + sent);
 				requested_file.close();
 				return CHUNCKED;
@@ -302,7 +313,7 @@ int Handle_request_response::clear(int fd, std::string connection)
 	else
 		return KILL_CONNECTION;
 }
-void Handle_request_response::send_string(int fd, std::string to_send)
+bool Handle_request_response::send_string(int fd, std::string to_send)
 {
 	size_t len = to_send.size();
 	size_t total_send = 0;
@@ -310,9 +321,12 @@ void Handle_request_response::send_string(int fd, std::string to_send)
 	do
 	{
 		size_t sent = send(fd, to_send.c_str(), to_send.size(), 0);
+		if (sent < 0)
+			return false;
 		to_send = to_send.substr(sent);
 		total_send += sent;
 	} while (total_send < len);
+	return true;
 }
 std::string Handle_request_response::defined_error_page_found(std::vector<std::string> &defined_error_pages, short status_code)
 {
