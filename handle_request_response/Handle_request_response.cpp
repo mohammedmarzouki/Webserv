@@ -119,4 +119,4 @@ void Response::clear_response()
 //////////////////////////////////////////////////
 Handle_request_response::Handle_request_response() {}
 
-const std::map<int, std::pair<Request, Response> > &Handle_request_response::get_requests() const { return requests; }
+Handle_request_response handler;

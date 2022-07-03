@@ -1,7 +1,6 @@
 #include "handler.hpp"
 
 std::vector<SocketMaker> srv;
-Handle_request_response handler;
 std::map<int, int> cli_srv;
 
 SocketMaker::~SocketMaker() {}

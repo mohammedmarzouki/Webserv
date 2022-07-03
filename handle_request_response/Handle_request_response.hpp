@@ -47,6 +47,9 @@
 #define KEEP_ALIVE 1
 
 #include "../parser/Parser.hpp"
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sstream>
 #include <map>
 #include <sys/socket.h> // socket(2), accept(2), listen(2), send(2), recv(2), bind(2), connect(2), inet_addr(3), setsockopt(2), getsockname(2)
@@ -55,6 +58,34 @@
 #include <sys/types.h>
 
 #define BUFFER_SIZE 1025
+
+//////////////////////////////////////////////////
+// CGI class
+//////////////////////////////////////////////////
+
+class cgi
+{
+private:
+	int _status;
+	std::string outfile;
+	int infd;
+	int outfd;
+	int pid;
+	int fd;
+	char *args[3];
+
+	int	MakeRespFile(int &fd);
+	int checktype(std::string path);
+	void SetCgiEnv();
+	void execute_cgi();
+public:
+	cgi();
+	~cgi();
+
+	void run(int fd);
+	int GetStatus();
+	std::string GetOutFile();
+};
 
 //////////////////////////////////////////////////
 // Request class
@@ -82,6 +113,7 @@ private:
 
 public:
 	Request();
+	cgi mycgi;
 
 	void set_method(std::string);
 	void set_path(std::string);
@@ -166,7 +198,6 @@ private:
 
 public:
 	Handle_request_response();
-	const std::map<int, std::pair<Request, Response> > &get_requests() const;
 
 	int recv_request(int, Server &);
 	int get_handle(int);
@@ -199,5 +230,7 @@ public:
 
 	friend class cgi;
 };
+
+extern Handle_request_response handler;
 
 #endif // HANDLE_REQUEST_RESPONSE_HPP
