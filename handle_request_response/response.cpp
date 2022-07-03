@@ -320,7 +320,7 @@ bool Handle_request_response::send_string(int fd, std::string to_send)
 
 	do
 	{
-		size_t sent = send(fd, to_send.c_str(), to_send.size(), 0);
+		long sent = send(fd, to_send.c_str(), to_send.size(), 0);
 		if (sent < 0)
 			return false;
 		to_send = to_send.substr(sent);
