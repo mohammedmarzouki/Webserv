@@ -11,9 +11,8 @@ private:
 	int infd;
 	int outfd;
 	int pid;
+	int fd;
 	char *args[3];
-	Request &request ;
-	Response &response ;
 
 	int	MakeRespFile(int &fd);
 	int checktype(std::string path);
@@ -21,8 +20,9 @@ private:
 	void SetStatus(int stat);
 	void SetCgiEnv();
 	void SetOutFile(std::string name);
+	void run(int fd);
 public:
-	cgi(int fd);
+	cgi();
 	~cgi();
 	int GetStatus();
 	int GetOutFile();
