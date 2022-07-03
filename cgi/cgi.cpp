@@ -7,7 +7,7 @@ int	cgi::MakeRespFile(int &fd){
 	std::string tmp;
 	s << fd , s >> tmp;
 	int ret = open(("/tmp/CgiResp" + tmp).c_str(), O_CREAT | O_WRONLY | O_TRUNC , 0666);
-
+	SetOutFile("/tmp/CgiResp" + tmp);
 	return (ret);
 }
 
@@ -28,17 +28,17 @@ void cgi::SetCgiEnv() {
 	setenv("SERVER_PROTOCOL", "HTTP/1.1",1);
 	setenv("REDIRECT_STATUS", "200",      1);
 	setenv("SCRIPT_NAME", args[1] , 1);
-	setenv("REQUEST_METHOD",  request.get_method().c_str(), 1);
-	setenv("CONTENT_TYPE", request.get_content_type().c_str(), 1);
-	if (request.get_method() == "GET") {
+	setenv("REQUEST_METHOD",  handler.requests[fd].first.get_method().c_str(), 1);
+	setenv("CONTENT_TYPE", handler.requests[fd].first.get_content_type().c_str(), 1);
+	if (handler.requests[fd].first.get_method() == "GET") {
 		setenv("QUERY_STRING", "", 1);
 		setenv("CONTENT_LENGTH", "", 1);
 	}
-	else if (request.get_method() == "POST") {
-		infd = open(request.get_path_to_upload().c_str(), O_RDONLY, 0666);
+	else if (handler.requests[fd].first.get_method() == "POST") {
+		infd = open(handler.requests[fd].first.get_path_to_upload().c_str(), O_RDONLY, 0666);
 		std::stringstream s;
 		std::string tmp;
-		s << request.get_content_length() , s >> tmp;
+		s << handler.requests[fd].first.get_content_length() , s >> tmp;
 		setenv("QUERY_STRING", "", 1);
 		setenv("CONTENT_LENGTH", "tmp", 1);
 	}
@@ -58,15 +58,19 @@ void	cgi::execute_cgi(){
 	}
 }
 
-cgi::cgi(int fd) :  infd(0), _status(0), request(handler.requests[fd].first), response(handler.requests[fd].second) {
-	request.get_method();
+cgi::cgi(){}
+
+void cgi::run(int fds)  {
+	infd = 0;
+	fd = fds;
+	_status = 0;
 	outfd = MakeRespFile(fd);
-	if (outfd < 0 || checktype(response.get_cgi_path()) != 1){
+	if (outfd < 0 || checktype(handler.requests[fd].second.get_cgi_path()) != 1){
 		SetStatus(500);
 		return;
 	}
-	char  *inputfile = (char*)request.get_path().c_str();
-	args[0] = (char *)response.get_cgi_path().c_str();
+	char  *inputfile = (char*)handler.requests[fd].first.get_path().c_str();
+	args[0] = (char *)handler.requests[fd].second.get_cgi_path().c_str();
 	args[1] = (char *)inputfile;
 	args[2] = NULL;
 	execute_cgi();
