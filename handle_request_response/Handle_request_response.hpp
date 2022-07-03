@@ -196,6 +196,8 @@ public:
 	bool send_string(int, std::string);
 	std::string defined_error_page_found(std::vector<std::string> &, short);
 	std::string int_to_str(int);
+
+	friend class cgi;
 };
 
 #endif // HANDLE_REQUEST_RESPONSE_HPP
