@@ -30,7 +30,7 @@ void cgi::SetCgiEnv()
 	setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
 	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
 	setenv("REDIRECT_STATUS", "200", 1);
-	setenv("SCRIPT_NAME", args[1], 1);
+	setenv("SCRIPT_NAME", (char *)handler.requests[fd].first.get_path().c_str(), 1);
 	setenv("REQUEST_METHOD", handler.requests[fd].first.get_method().c_str(), 1);
 	setenv("CONTENT_TYPE", handler.requests[fd].first.get_content_type().c_str(), 1);
 	if (handler.requests[fd].first.get_method() == "GET")
@@ -59,7 +59,7 @@ void cgi::execute_cgi()
 		SetCgiEnv();
 		dup2(infd, 0);
 		dup2(outfd, 1);
-		execve(args[0], (char **)args, env);
+		execve(args[0], args, env);
 		exit(1);
 	}
 }

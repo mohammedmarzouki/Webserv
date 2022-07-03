@@ -110,11 +110,13 @@ int Handle_request_response::get_handle(int fd)
 		std::vector<std::string> cgi = requests[fd].first.get_location().get_cgi();
 		std::vector<std::string>::iterator it;
 
+		// running CGI code here
 		if ((it = find(cgi.begin(), cgi.end(), ext)) != cgi.end())
 		{
 			requests[fd].second.set_cgi(*it++);
 			requests[fd].second.set_cgi_path(*it);
-			// running CGI code here
+			requests[fd].first.mycgi.run(fd);
+			requests[fd].first.set_cgi(true);
 		}
 		else
 			requests[fd].second.set_content_length(info.st_size);
@@ -214,7 +216,21 @@ int Handle_request_response::post_handle(int fd, std::string &received, int read
 		if (requests[fd].first.get_read_bytes() < requests[fd].first.get_content_length())
 			return CHUNCKED;
 	}
-	requests[fd].first.set_status_code(NO_CONTENT);
+	// CGI Handling
+	std::string ext = ext_from_path(requests[fd].first.get_path());
+	std::vector<std::string> cgi = requests[fd].first.get_location().get_cgi();
+	std::vector<std::string>::iterator it;
+
+	// running CGI code here
+	if ((it = find(cgi.begin(), cgi.end(), ext)) != cgi.end())
+	{
+		requests[fd].second.set_cgi(*it++);
+		requests[fd].second.set_cgi_path(*it);
+		requests[fd].first.mycgi.run(fd);
+		requests[fd].first.set_cgi(true);
+	}
+	else
+		requests[fd].first.set_status_code(NO_CONTENT);
 	return DONE;
 }
 int Handle_request_response::delete_handle(int fd)

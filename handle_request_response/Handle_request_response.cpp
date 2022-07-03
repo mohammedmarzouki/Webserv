@@ -19,6 +19,7 @@ Request::Request()
 	_chunked_bytes = -1;
 	_chunked_temp = "";
 	_cookie = "";
+	_cgi = false;
 }
 
 void Request::set_method(std::string method) { this->_method = method; }
@@ -38,6 +39,7 @@ void Request::set_path_to_upload(std::string path_to_upload) { this->_path_to_up
 void Request::set_chunked_bytes(long chunked_bytes) { this->_chunked_bytes = chunked_bytes; }
 void Request::set_chunked_temp(std::string chunked_temp) { this->_chunked_temp = chunked_temp; }
 void Request::set_cookie(std::string cookie) { this->_cookie = cookie; }
+void Request::set_cgi(bool cgi) { this->_cgi = cgi; }
 std::string Request::get_method() const { return _method; }
 std::string Request::get_path() const { return _path; }
 std::string Request::get_host() const { return _host; }
@@ -55,6 +57,7 @@ std::string Request::get_path_to_upload() const { return _path_to_upload; }
 long Request::get_chunked_bytes() const { return _chunked_bytes; }
 std::string Request::get_chunked_temp() const { return _chunked_temp; }
 std::string Request::get_cookie() const { return _cookie; }
+bool Request::get_cgi() const { return _cgi; }
 
 void Request::clear_request()
 {
@@ -72,6 +75,7 @@ void Request::clear_request()
 	_chunked_bytes = -1;
 	_chunked_temp = "";
 	_cookie = "";
+	_cgi = false;
 }
 
 //////////////////////////////////////////////////

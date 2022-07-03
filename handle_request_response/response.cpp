@@ -5,6 +5,28 @@
 //////////////////////////////////////////////////
 int Handle_request_response::send_response(int fd, Server &server)
 {
+	if (requests[fd].first.get_cgi())
+	{
+		int cgi_status = requests[fd].first.mycgi.GetStatus();
+		if (!cgi_status)
+			return CHUNKED;
+		else if (cgi_status == 1)
+		{
+			std::cout << "got here" << std::endl;
+			std::ifstream file(requests[fd].first.mycgi.GetOutFile());
+			if (file.good())
+			{
+				std::stringstream buffer;
+				buffer << file.rdbuf();
+				std::cout << buffer.str() << std::endl;
+			}
+		}
+		else
+		{
+			std::cout << "FAILED" << std::endl;
+		}
+		return clear(fd, requests[fd].first.get_connection());
+	}
 	if (requests[fd].first.get_status_code() != 200 && requests[fd].first.get_status_code() != 204)
 	{
 		std::string error_page;

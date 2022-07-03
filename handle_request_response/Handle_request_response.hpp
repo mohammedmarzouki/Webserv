@@ -110,6 +110,7 @@ private:
 	long _chunked_bytes;
 	std::string _chunked_temp;
 	std::string _cookie;
+	bool _cgi;
 
 public:
 	Request();
@@ -132,6 +133,7 @@ public:
 	void set_chunked_bytes(long);
 	void set_chunked_temp(std::string);
 	void set_cookie(std::string);
+	void set_cgi(bool);
 	std::string get_method() const;
 	std::string get_path() const;
 	std::string get_host() const;
@@ -149,6 +151,7 @@ public:
 	long get_chunked_bytes() const;
 	std::string get_chunked_temp() const;
 	std::string get_cookie() const;
+	bool get_cgi() const;
 
 	void clear_request();
 };

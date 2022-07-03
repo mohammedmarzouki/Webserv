@@ -197,7 +197,7 @@ std::string Regex::match_uri(std::string &string)
 {
 	if (string[0] == '/')
 	{
-		std::string::size_type pos = string.find_first_not_of("./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
+		std::string::size_type pos = string.find_first_not_of("-./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
 		if (pos != std::string::npos)
 			return string.substr(0, pos);
 		else
