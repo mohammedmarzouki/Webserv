@@ -8,7 +8,7 @@ int cgi::MakeRespFile(int &fd)
 	std::stringstream s;
 	std::string tmp;
 	s << fd, s >> tmp;
-	int ret = open(("/tmp/CgiResp" + tmp).c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
+	int ret = open(("/tmp/CgiResp" + tmp).c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
 	outfile = "/tmp/CgiResp" + tmp;
 	return (ret);
 }
@@ -50,7 +50,6 @@ void cgi::SetCgiEnv()
 }
 void cgi::execute_cgi()
 {
-	char **env;
 	pid = fork();
 	if (pid < 0)
 		return;
@@ -59,7 +58,7 @@ void cgi::execute_cgi()
 		SetCgiEnv();
 		dup2(infd, 0);
 		dup2(outfd, 1);
-		execve(args[0], args, env);
+		execv(args[0], args);
 		exit(1);
 	}
 }
@@ -78,9 +77,10 @@ void cgi::run(int fds)
 		_status = 500;
 		return;
 	}
-	char *inputfile = (char *)handler.requests[fd].first.get_path().c_str();
-	args[0] = (char *)handler.requests[fd].second.get_cgi_path().c_str();
-	args[1] = (char *)inputfile;
+	std::string cgipsth = handler.requests[fd].second.get_cgi_path();
+	std::string inputfile = handler.requests[fd].first.get_path();
+	args[0] = (char *)cgipsth.data();
+	args[1] = (char *)inputfile.data();
 	args[2] = NULL;
 	execute_cgi();
 }
