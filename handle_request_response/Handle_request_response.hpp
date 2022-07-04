@@ -84,7 +84,7 @@ public:
 
 	void run(int fd);
 	int GetStatus();
-	std::string GetOutFile();
+	std::string &GetOutFile();
 };
 
 //////////////////////////////////////////////////

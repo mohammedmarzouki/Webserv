@@ -101,4 +101,4 @@ int cgi::GetStatus()
 		return (1); // done
 	return (500);	// server error
 }
-std::string cgi::GetOutFile() { return (outfile); }
+std::string &cgi::GetOutFile() { return (outfile); }

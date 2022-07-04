@@ -245,9 +245,9 @@ int Handle_request_response::delete_handle(int fd)
 		return DONE;
 	}
 	else if (S_ISREG(statbuf.st_mode))
-		path_to_delete = "rm " + path;
+		path_to_delete = "rm -rf" + path;
 	else if (S_ISDIR(statbuf.st_mode))
-		path_to_delete = "rm -r " + path;
+		path_to_delete = "rm -rf " + path;
 
 	if (S_IWUSR & statbuf.st_mode)
 	{
@@ -333,6 +333,7 @@ Location Handle_request_response::right_location(int fd, std::string path, Serve
 	if (location.get_uri() != "NULL" && location.get_redirect() != "NULL")
 	{
 		requests[fd].first.set_path(location.get_redirect());
+		requests[fd].first.set_status_code(MOVED_PERMANENTLY);
 		return right_location(fd, location.get_redirect(), server);
 	}
 
@@ -371,7 +372,10 @@ bool Handle_request_response::fix_path(Request &request)
 
 	// uri.size() == 1 => "/"
 	route_size = route_size == 1 ? 0 : route_size;
-	request.set_path(uri + request.get_path().substr(route_size));
+	if (location.get_uri() != request.get_path())
+		request.set_path(uri + request.get_path().substr(route_size));
+	else
+		request.set_path(uri + request.get_path().substr(route_size) + '/');
 	return true;
 }
 std::vector<std::string> Handle_request_response::split_string(std::string str, std::string delimiter)

@@ -39,7 +39,8 @@ int Handle_request_response::send_response(int fd, Server &server)
 		requests[fd].first.set_cgi(false);
 		return send_response(fd, server);
 	}
-	if (requests[fd].first.get_status_code() != 200 && requests[fd].first.get_status_code() != 204)
+	if (requests[fd].first.get_status_code() != 200 && requests[fd].first.get_status_code() != 204
+		&& requests[fd].first.get_status_code() != 301)
 	{
 		std::string error_page;
 		std::vector<std::string> defined_error_pages = server.get_error_page();
