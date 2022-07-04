@@ -26,6 +26,7 @@ int Handle_request_response::send_response(int fd, Server &server)
 					requests.erase(fd);
 					return FAILED;
 				}
+				return clear(fd, requests[fd].first.get_connection());
 			}
 			else
 			{
